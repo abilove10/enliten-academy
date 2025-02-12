@@ -1,20 +1,47 @@
 import React, { useEffect, useState } from 'react';
-import { auth } from '../firebase/config';
+import { auth, db } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
-import { Phone, Mail, User, LogOut } from 'react-feather';
-import Logo from '../assets/logo/logo.png';
+import { Target, Award } from 'react-feather';
+import Sidebar from '../components/Sidebar';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
+    const [userData, setUserData] = useState(null);
+    const [assessments, setAssessments] = useState([]);
     const navigate = useNavigate();
 
     useEffect(() => {
-        // Check if user is authenticated
+        const fetchUserData = async (user) => {
+            try {
+                const userDoc = await getDoc(doc(db, "users", user.uid));
+                if (userDoc.exists()) {
+                    const data = userDoc.data();
+                    setUserData(data);
+                    
+                    // Fetch assessments if assessment_count > 0
+                    if (data.assessment_count > 0) {
+                        const assessmentsRef = collection(db, "assessment");
+                        const q = query(assessmentsRef, where("userId", "==", user.uid));
+                        const querySnapshot = await getDocs(q);
+                        const assessmentData = [];
+                        querySnapshot.forEach((doc) => {
+                            assessmentData.push({ id: doc.id, ...doc.data() });
+                        });
+                        setAssessments(assessmentData);
+                    }
+                }
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            }
+        };
+
         const unsubscribe = auth.onAuthStateChanged((user) => {
             if (user) {
                 setUser(user);
+                fetchUserData(user);
             } else {
-                // Redirect to signup if not authenticated
                 navigate('/signup');
             }
         });
@@ -22,127 +49,137 @@ export default function Dashboard() {
         return () => unsubscribe();
     }, [navigate]);
 
-    const handleSignOut = async () => {
-        try {
-            await auth.signOut();
-            navigate('/signup');
-        } catch (error) {
-            console.error("Error signing out:", error);
-        }
-    };
-
-    if (!user) {
-        return <div>Loading...</div>;
-    }
+    if (!user || !userData) return <div>Loading...</div>;
 
     return (
-        <div style={{
-            minHeight: '100vh',
-            backgroundColor: '#f5f5f5',
-            padding: '20px'
-        }}>
-            <div style={{
-                maxWidth: '1200px',
-                margin: '0 auto',
-                backgroundColor: 'white',
-                borderRadius: '15px',
-                padding: '30px',
-                boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        <div style={{ display: 'flex' }}>
+            <Sidebar />
+            <div style={{ 
+                marginLeft: '250px', 
+                padding: '20px',
+                backgroundColor: '#f5f5f5',
+                minHeight: '100vh',
+                width: '100%'
             }}>
                 <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
+                    backgroundColor: '#8A2BE2',
+                    padding: '10px 20px',
+                    borderRadius: '30px',
+                    color: 'white',
+                    display: 'inline-flex',
                     alignItems: 'center',
-                    marginBottom: '40px'
-                }}>
-                    <img src={Logo} alt="logo" style={{ height: '40px' }} />
-                    <button
-                        onClick={handleSignOut}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            padding: '10px 20px',
-                            border: '1px solid #ff4444',
-                            borderRadius: '8px',
-                            backgroundColor: 'white',
-                            color: '#ff4444',
-                            cursor: 'pointer'
-                        }}
-                    >
-                        <LogOut size={18} />
-                        Sign Out
-                    </button>
-                </div>
-
-                <h1 style={{ marginBottom: '30px' }}>Welcome, {user.displayName || 'User'}!</h1>
-
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                    gap: '20px',
-                    marginBottom: '40px'
-                }}>
-                    <div style={{
-                        padding: '20px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px'
-                    }}>
-                        <User size={24} color="#8A2BE2" />
-                        <div>
-                            <h3 style={{ margin: '0', color: '#666' }}>Display Name</h3>
-                            <p style={{ margin: '5px 0 0 0', fontSize: '16px' }}>{user.displayName || 'Not set'}</p>
-                        </div>
-                    </div>
-
-                    <div style={{
-                        padding: '20px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px'
-                    }}>
-                        <Mail size={24} color="#8A2BE2" />
-                        <div>
-                            <h3 style={{ margin: '0', color: '#666' }}>Email</h3>
-                            <p style={{ margin: '5px 0 0 0', fontSize: '16px' }}>{user.email || 'Not set'}</p>
-                        </div>
-                    </div>
-
-                    <div style={{
-                        padding: '20px',
-                        backgroundColor: '#f8f9fa',
-                        borderRadius: '10px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px'
-                    }}>
-                        <Phone size={24} color="#8A2BE2" />
-                        <div>
-                            <h3 style={{ margin: '0', color: '#666' }}>Phone Number</h3>
-                            <p style={{ margin: '5px 0 0 0', fontSize: '16px' }}>{user.phoneNumber || 'Not set'}</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div style={{
-                    padding: '20px',
-                    backgroundColor: '#f8f9fa',
-                    borderRadius: '10px',
                     marginBottom: '20px'
                 }}>
-                    <h2 style={{ marginTop: '0' }}>Account Details</h2>
-                    <div style={{ display: 'grid', gap: '10px' }}>
-                        <p style={{ margin: '5px 0' }}><strong>User ID:</strong> {user.uid}</p>
-                        <p style={{ margin: '5px 0' }}><strong>Email Verified:</strong> {user.emailVerified ? 'Yes' : 'No'}</p>
-                        <p style={{ margin: '5px 0' }}><strong>Account Created:</strong> {user.metadata.creationTime}</p>
-                        <p style={{ margin: '5px 0' }}><strong>Last Sign In:</strong> {user.metadata.lastSignInTime}</p>
+                    <span style={{ marginRight: '10px' }}>🎉</span>
+                    Get Yearly subscription @ ₹1 per day
+                </div>
+
+                <div style={{ marginBottom: '30px' }}>
+                    <p style={{ color: '#666' }}>Welcome Back</p>
+                    <h1>Hello, {userData.name || 'Student'} 👋</h1>
+                </div>
+
+                <h2>Study statistics</h2>
+                <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '20px',
+                    marginBottom: '30px'
+                }}>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '15px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '15px'
+                    }}>
+                        <Award size={24} color="#8A2BE2" />
+                        <div>
+                            <p style={{ color: '#666' }}>Ranking</p>
+                            <h2 style={{ margin: '5px 0' }}>{userData.rank || 'N/A'}</h2>
+                        </div>
+                    </div>
+
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '15px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '15px'
+                    }}>
+                        <Target size={24} color="#8A2BE2" />
+                        <div>
+                            <p style={{ color: '#666' }}>Score</p>
+                            <h2 style={{ margin: '5px 0' }}>{userData.total_score}/100</h2>
+                        </div>
+                    </div>
+
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '15px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '15px'
+                    }}>
+                        <Target size={24} color="#8A2BE2" />
+                        <div>
+                            <p style={{ color: '#666' }}>Accuracy</p>
+                            <h2 style={{ margin: '5px 0' }}>{userData.accuracy}%</h2>
+                        </div>
                     </div>
                 </div>
+
+                <h2>Table analysis</h2>
+                {userData.assessment_count === 0 ? (
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '40px',
+                        borderRadius: '15px',
+                        textAlign: 'center',
+                        color: '#666'
+                    }}>
+                        No Sufficient Data
+                    </div>
+                ) : (
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '15px',
+                        overflowX: 'auto'
+                    }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                            <thead>
+                                <tr style={{ borderBottom: '1px solid #eee' }}>
+                                    <th style={{ padding: '10px', textAlign: 'left' }}>No. Questions</th>
+                                    <th style={{ padding: '10px', textAlign: 'left' }}>Correct</th>
+                                    <th style={{ padding: '10px', textAlign: 'left' }}>Incorrect</th>
+                                    <th style={{ padding: '10px', textAlign: 'left' }}>Skipped</th>
+                                    <th style={{ padding: '10px', textAlign: 'left' }}>Accuracy</th>
+                                    <th style={{ padding: '10px', textAlign: 'left' }}>Score</th>
+                                    <th style={{ padding: '10px', textAlign: 'left' }}>Duration</th>
+                                    <th style={{ padding: '10px', textAlign: 'left' }}>Rank</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {assessments.map((assessment) => (
+                                    <tr key={assessment.id} style={{ borderBottom: '1px solid #eee' }}>
+                                        <td style={{ padding: '10px' }}>{assessment.totalQuestions}</td>
+                                        <td style={{ padding: '10px' }}>{assessment.correct}</td>
+                                        <td style={{ padding: '10px' }}>{assessment.incorrect}</td>
+                                        <td style={{ padding: '10px' }}>{assessment.skipped}</td>
+                                        <td style={{ padding: '10px' }}>{assessment.accuracy}%</td>
+                                        <td style={{ padding: '10px' }}>{assessment.score}</td>
+                                        <td style={{ padding: '10px' }}>{assessment.duration}</td>
+                                        <td style={{ padding: '10px' }}>{assessment.rank}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
             </div>
         </div>
     );

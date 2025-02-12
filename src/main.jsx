@@ -25,6 +25,13 @@ createRoot(document.getElementById('root')).render(
               </ProtectedRoute>
             } 
           />
+          {/* <Route path="ai-consultant" element={<ProtectedRoute><AiConsultant /></ProtectedRoute>} />
+          <Route path="news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+          <Route path="explore" element={<ProtectedRoute><Explore /></ProtectedRoute>} />
+          <Route path="quiz" element={<ProtectedRoute><Quiz /></ProtectedRoute>} />
+          <Route path="features" element={<ProtectedRoute><Features /></ProtectedRoute>} />
+          <Route path="about" element={<ProtectedRoute><About /></ProtectedRoute>} />
+          <Route path="settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} /> */}
           <Route path="*" element={<App />} />
         </Route>
       </Routes>

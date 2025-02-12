@@ -2,6 +2,7 @@ import { useState, React } from "react";
 import { getAuth, signInWithPhoneNumber, RecaptchaVerifier, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
 import { auth, googleProvider } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
+import { createUserDocument } from '../utils/userUtils';
 //images
 import avatar from '../assets/avatar.png'
 import Logo from '../assets/logo/logo.png'
@@ -57,6 +58,10 @@ export default function Signup() {
             const result = await window.confirmationResult.confirm(verificationCode);
             const user = result.user;
             console.log("User signed in:", user);
+            
+            // Create user document in Firestore
+            await createUserDocument(user);
+            
             navigate('/dashboard');
         } catch (err) {
             setError(err.message);
@@ -69,9 +74,12 @@ export default function Signup() {
             setIsLoading(true);
             setError('');
             const result = await signInWithPopup(auth, googleProvider);
-            const credential = GoogleAuthProvider.credentialFromResult(result);
             const user = result.user;
             console.log("Google Sign in successful:", user);
+            
+            // Create user document in Firestore
+            await createUserDocument(user);
+            
             navigate('/dashboard');
         } catch (err) {
             let errorMessage = "An error occurred during Google sign in.";
