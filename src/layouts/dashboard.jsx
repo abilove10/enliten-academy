@@ -5,12 +5,15 @@ import { Target, Award } from 'react-feather';
 import Sidebar from '../components/Sidebar';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { doc, getDoc } from 'firebase/firestore';
+import { useSidebar } from '../context/SidebarContext';
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
     const [userData, setUserData] = useState(null);
     const [assessments, setAssessments] = useState([]);
     const navigate = useNavigate();
+    const { isSidebarOpen } = useSidebar();
+    const isMobile = window.innerWidth <= 768;
 
     useEffect(() => {
         const fetchUserData = async (user) => {
@@ -55,34 +58,61 @@ export default function Dashboard() {
         <div style={{ display: 'flex' }}>
             <Sidebar />
             <div style={{ 
-                marginLeft: '250px', 
+                marginLeft: isSidebarOpen ? '250px' : '0',
                 padding: '20px',
                 backgroundColor: '#f5f5f5',
                 minHeight: '100vh',
-                width: '100%'
+                width: '100%',
+                transition: 'margin-left 0.3s ease'
             }}>
-                <div style={{
-                    backgroundColor: '#8A2BE2',
-                    padding: '10px 20px',
-                    borderRadius: '30px',
-                    color: 'white',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    marginBottom: '20px'
+                {!isSidebarOpen && (
+                    <div style={{ height: '60px' }} /> // Spacer for the menu button
+                )}
+                
+                {isSidebarOpen && (
+                    <div style={{
+                        backgroundColor: '#8A2BE2',
+                        padding: '10px 20px',
+                        borderRadius: '30px',
+                        color: 'white',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        marginBottom: '20px'
+                    }}>
+                        <span style={{ marginRight: '10px' }}>🎉</span>
+                        Get Yearly subscription @ ₹1 per day
+                    </div>
+                )}
+
+                <div style={{ 
+                    marginBottom: '30px',
+                    marginTop: isSidebarOpen ? '0' : '20px'
                 }}>
-                    <span style={{ marginRight: '10px' }}>🎉</span>
-                    Get Yearly subscription @ ₹1 per day
+                    <p style={{ 
+                        color: '#666',
+                        fontSize: '14px',
+                        marginBottom: '8px'
+                    }}>Welcome Back</p>
+                    <h1 style={{
+                        fontSize: '28px',
+                        fontWeight: '600',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                    }}>
+                        Hello, {userData.name || 'Student'} 
+                        <span style={{ fontSize: '24px' }}>👋</span>
+                    </h1>
                 </div>
 
-                <div style={{ marginBottom: '30px' }}>
-                    <p style={{ color: '#666' }}>Welcome Back</p>
-                    <h1>Hello, {userData.name || 'Student'} 👋</h1>
-                </div>
-
-                <h2>Study statistics</h2>
+                <h2 style={{
+                    fontSize: '24px',
+                    fontWeight: '600',
+                    marginBottom: '20px'
+                }}>Study statistics</h2>
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
                     gap: '20px',
                     marginBottom: '30px'
                 }}>
@@ -132,7 +162,12 @@ export default function Dashboard() {
                     </div>
                 </div>
 
-                <h2>Table analysis</h2>
+                <h2 style={{
+                    fontSize: '24px',
+                    fontWeight: '600',
+                    marginBottom: '20px',
+                    marginTop: '40px'
+                }}>Table analysis</h2>
                 {userData.assessment_count === 0 ? (
                     <div style={{
                         backgroundColor: 'white',
@@ -146,7 +181,7 @@ export default function Dashboard() {
                 ) : (
                     <div style={{
                         backgroundColor: 'white',
-                        padding: '20px',
+                        padding: isMobile ? '10px' : '20px',
                         borderRadius: '15px',
                         overflowX: 'auto'
                     }}>
