@@ -158,6 +158,7 @@ export default function Signup() {
             <div className="right-block" style={{
                 width: mobile ? '100%' : '55%',
                 padding: '40px',
+                backgroundColor: '#fff',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',

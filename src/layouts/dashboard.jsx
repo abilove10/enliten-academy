@@ -6,14 +6,39 @@ import Sidebar from '../components/Sidebar';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { doc, getDoc } from 'firebase/firestore';
 import { useSidebar } from '../context/SidebarContext';
+import { Bar } from 'react-chartjs-2';
+import {
+    Chart as ChartJS,
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+} from 'chart.js';
+
+// Register ChartJS components
+ChartJS.register(
+    CategoryScale,
+    LinearScale,
+    BarElement,
+    Title,
+    Tooltip,
+    Legend
+);
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
     const [userData, setUserData] = useState(null);
     const [assessments, setAssessments] = useState([]);
+    const [subjectData, setSubjectData] = useState({
+        labels: [],
+        values: []
+    });
     const navigate = useNavigate();
     const { isSidebarOpen } = useSidebar();
     const isMobile = window.innerWidth <= 768;
+    const [contentWidth, setContentWidth] = useState('100%');
 
     useEffect(() => {
         const fetchUserData = async (user) => {
@@ -23,6 +48,13 @@ export default function Dashboard() {
                     const data = userDoc.data();
                     setUserData(data);
                     
+                    // Process subject analysis data
+                    const subjects = data.subject_analysis;
+                    setSubjectData({
+                        labels: Object.keys(subjects),
+                        values: Object.values(subjects)
+                    });
+
                     // Fetch assessments if assessment_count > 0
                     if (data.assessment_count > 0) {
                         const assessmentsRef = collection(db, "assessment");
@@ -63,6 +95,134 @@ export default function Dashboard() {
         };
     }, [isSidebarOpen]);
 
+    useEffect(() => {
+        const updateContentWidth = () => {
+            const sidebarWidth = 300; // Width of sidebar
+            const windowWidth = window.innerWidth;
+            
+            if (windowWidth <= 768) {
+                setContentWidth('100%');
+            } else {
+                setContentWidth(isSidebarOpen ? `calc(100% - ${sidebarWidth}px)` : '100%');
+            }
+        };
+
+        // Update initially
+        updateContentWidth();
+
+        // Add resize listener
+        window.addEventListener('resize', updateContentWidth);
+
+        // Cleanup
+        return () => window.removeEventListener('resize', updateContentWidth);
+    }, [isSidebarOpen]);
+
+    // Update the chart options configuration
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'x',
+        scales: {
+            y: {
+                beginAtZero: true,
+                max: 100,
+                grid: {
+                    display: true,
+                    color: '#f0f0f0',
+                    drawBorder: false,
+                },
+                ticks: {
+                    font: {
+                        size: 12
+                    }
+                }
+            },
+            x: {
+                grid: {
+                    display: false
+                },
+                ticks: {
+                    maxRotation: 0,
+                    minRotation: 0,
+                    autoSkip: false,
+                    font: {
+                        size: 11
+                    }
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        layout: {
+            padding: {
+                left: 20,
+                right: 20,
+                top: 20,
+                bottom: 20
+            }
+        }
+    };
+
+    // Update the table styling section
+    const tableStyles = {
+        container: {
+            backgroundColor: '#F8F2FF',
+            padding: '20px',
+            borderRadius: '15px',
+            boxShadow: '0 2px 4px rgba(0,0,0,0.05)',
+            marginTop: '20px',
+            width: '100%'
+        },
+        table: {
+            width: '100%',
+            borderCollapse: 'separate',
+            borderSpacing: '0 8px',
+            margin: '10px 0',
+            minWidth: '800px'
+        },
+        th: {
+            padding: '12px 20px',
+            textAlign: 'left',
+            color: '#666',
+            fontWeight: '500',
+            fontSize: '14px',
+            backgroundColor: 'transparent'
+        },
+        td: {
+            padding: '12px 20px',
+            backgroundColor: 'white',
+            color: '#333',
+            fontSize: '14px'
+        },
+        tr: {
+            transition: 'all 0.2s'
+        },
+        'td:first-child': {
+            borderTopLeftRadius: '8px',
+            borderBottomLeftRadius: '8px'
+        },
+        'td:last-child': {
+            borderTopRightRadius: '8px',
+            borderBottomRightRadius: '8px'
+        }
+    };
+
+    // Add this chart data configuration
+    const chartData = {
+        labels: subjectData.labels,
+        datasets: [
+            {
+                data: subjectData.values,
+                backgroundColor: '#8A2BE2',
+                borderRadius: 6,
+                barThickness: 20,
+            }
+        ]
+    };
+
     if (!user || !userData) return <div>Loading...</div>;
 
     return (
@@ -74,11 +234,11 @@ export default function Dashboard() {
         }}>
             <Sidebar />
             <div style={{ 
-                marginLeft: isSidebarOpen && window.innerWidth > 768 ? '250px' : '0',
-                padding: '20px',
-                backgroundColor: '#f5f5f5',
-                width: '100%',
-                transition: 'margin-left 0.3s ease',
+                width: contentWidth,
+                marginLeft: isSidebarOpen && window.innerWidth > 768 ? '300px' : '0',
+                padding: '30px',
+                backgroundColor: '#FCF6FF',
+                transition: 'all 0.3s ease',
                 position: 'relative',
                 zIndex: 1
             }}>
@@ -120,6 +280,33 @@ export default function Dashboard() {
                         Hello, {userData.name || 'Student'} 
                         <span style={{ fontSize: '24px' }}>👋</span>
                     </h1>
+                </div>
+
+                <div style={{
+                    marginBottom: '30px'
+                }}>
+                    <h2 style={{
+                        fontSize: '24px',
+                        fontWeight: '600',
+                        marginBottom: '20px'
+                    }}>Subject Analysis</h2>
+                    <div style={{
+                        backgroundColor: 'white',
+                        padding: '20px',
+                        borderRadius: '15px',
+                        height: '400px',
+                        width: '100%',
+                        overflowX: 'auto',
+                        overflowY: 'hidden',
+                        transition: 'width 0.3s ease'
+                    }}>
+                        <div style={{
+                            minWidth: '800px',
+                            height: '100%'
+                        }}>
+                            <Bar options={chartOptions} data={chartData} />
+                        </div>
+                    </div>
                 </div>
 
                 <h2 style={{
@@ -191,45 +378,50 @@ export default function Dashboard() {
                         padding: '40px',
                         borderRadius: '15px',
                         textAlign: 'center',
-                        color: '#666'
+                        color: '#666',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
                     }}>
                         No Sufficient Data
                     </div>
                 ) : (
                     <div style={{
-                        backgroundColor: 'white',
-                        padding: isMobile ? '10px' : '20px',
-                        borderRadius: '15px',
-                        overflowX: 'auto'
+                        ...tableStyles.container,
+                        transition: 'width 0.3s ease',
+                        width: '100%'
                     }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr style={{ borderBottom: '1px solid #eee' }}>
-                                    <th style={{ padding: '10px', textAlign: 'left' }}>No. Questions</th>
-                                    <th style={{ padding: '10px', textAlign: 'left' }}>Correct</th>
-                                    <th style={{ padding: '10px', textAlign: 'left' }}>Incorrect</th>
-                                    <th style={{ padding: '10px', textAlign: 'left' }}>Skipped</th>
-                                    <th style={{ padding: '10px', textAlign: 'left' }}>Accuracy</th>
-                                    <th style={{ padding: '10px', textAlign: 'left' }}>Score</th>
-                                    <th style={{ padding: '10px', textAlign: 'left' }}>Duration</th>
-                                    <th style={{ padding: '10px', textAlign: 'left' }}>Rank</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {assessments.map((assessment) => (
-                                    <tr key={assessment.id} style={{ borderBottom: '1px solid #eee' }}>
-                                        <td style={{ padding: '10px' }}>{assessment.totalQuestions}</td>
-                                        <td style={{ padding: '10px' }}>{assessment.correct}</td>
-                                        <td style={{ padding: '10px' }}>{assessment.incorrect}</td>
-                                        <td style={{ padding: '10px' }}>{assessment.skipped}</td>
-                                        <td style={{ padding: '10px' }}>{assessment.accuracy}%</td>
-                                        <td style={{ padding: '10px' }}>{assessment.score}</td>
-                                        <td style={{ padding: '10px' }}>{assessment.duration}</td>
-                                        <td style={{ padding: '10px' }}>{assessment.rank}</td>
+                        <div style={{
+                            overflowX: 'auto',
+                            width: '100%'
+                        }}>
+                            <table style={tableStyles.table}>
+                                <thead>
+                                    <tr>
+                                        <th style={tableStyles.th}>No. Questions</th>
+                                        <th style={tableStyles.th}>Correct</th>
+                                        <th style={tableStyles.th}>Incorrect</th>
+                                        <th style={tableStyles.th}>Skipped</th>
+                                        <th style={tableStyles.th}>Accuracy</th>
+                                        <th style={tableStyles.th}>Score</th>
+                                        <th style={tableStyles.th}>Duration</th>
+                                        <th style={tableStyles.th}>Rank</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {assessments.map((assessment) => (
+                                        <tr key={assessment.id} style={tableStyles.tr}>
+                                            <td style={{...tableStyles.td, ...tableStyles['td:first-child']}}>{assessment.totalQuestions}</td>
+                                            <td style={tableStyles.td}>{assessment.correct}</td>
+                                            <td style={tableStyles.td}>{assessment.incorrect}</td>
+                                            <td style={tableStyles.td}>{assessment.skipped}</td>
+                                            <td style={tableStyles.td}>{assessment.accuracy}%</td>
+                                            <td style={tableStyles.td}>{assessment.score}</td>
+                                            <td style={tableStyles.td}>{assessment.duration}</td>
+                                            <td style={{...tableStyles.td, ...tableStyles['td:last-child']}}>{assessment.rank}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 )}
             </div>

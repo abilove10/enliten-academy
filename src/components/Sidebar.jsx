@@ -43,6 +43,13 @@ export default function Sidebar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+
+    const isMobile = () => { 
+        return /Mobi|Android/i.test(navigator.userAgent); 
+      }; 
+       
+      // Usage in a React component 
+        const mobile = isMobile(); 
     return (
         <>
             {/* Overlay */}
@@ -58,7 +65,7 @@ export default function Sidebar() {
                         backgroundColor: 'rgba(0, 0, 0, 0.5)',
                         zIndex: 998,
                         transition: 'opacity 0.3s ease',
-                        opacity: isSidebarOpen ? 1 : 0,
+                        opacity: isSidebarOpen ? mobile ? 1 : 0 : 0,
                         pointerEvents: isSidebarOpen ? 'auto' : 'none'
                     }}
                 />
@@ -71,7 +78,7 @@ export default function Sidebar() {
                     position: 'fixed',
                     top: '20px',
                     left: '20px',
-                    zIndex: 1001,
+                    zIndex: 100,
                     padding: '8px 12px',
                     borderRadius: '8px',
                     border: 'none',
