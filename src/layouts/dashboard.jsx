@@ -66,15 +66,21 @@ export default function Dashboard() {
     if (!user || !userData) return <div>Loading...</div>;
 
     return (
-        <div style={{ display: 'flex' }}>
+        <div style={{ 
+            display: 'flex',
+            minHeight: '100vh',
+            position: 'relative',
+            overflow: isSidebarOpen && window.innerWidth <= 768 ? 'hidden' : 'auto'
+        }}>
             <Sidebar />
             <div style={{ 
-                marginLeft: isSidebarOpen ? '250px' : '0',
+                marginLeft: isSidebarOpen && window.innerWidth > 768 ? '250px' : '0',
                 padding: '20px',
                 backgroundColor: '#f5f5f5',
-                minHeight: '100vh',
                 width: '100%',
-                transition: 'margin-left 0.3s ease'
+                transition: 'margin-left 0.3s ease',
+                position: 'relative',
+                zIndex: 1
             }}>
                 {!isSidebarOpen && (
                     <div style={{ height: '60px' }} /> // Spacer for the menu button

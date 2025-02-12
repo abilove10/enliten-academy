@@ -45,13 +45,33 @@ export default function Sidebar() {
 
     return (
         <>
+            {/* Overlay */}
+            {isSidebarOpen && (
+                <div 
+                    onClick={() => setIsSidebarOpen(false)}
+                    style={{
+                        position: 'fixed',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                        zIndex: 998,
+                        transition: 'opacity 0.3s ease',
+                        opacity: isSidebarOpen ? 1 : 0,
+                        pointerEvents: isSidebarOpen ? 'auto' : 'none'
+                    }}
+                />
+            )}
+
+            {/* Menu Button */}
             <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                 style={{
                     position: 'fixed',
                     top: '20px',
                     left: '20px',
-                    zIndex: 1000,
+                    zIndex: 1001,
                     padding: '8px 12px',
                     borderRadius: '8px',
                     border: 'none',
@@ -112,43 +132,71 @@ export default function Sidebar() {
                 )}
             </button>
 
+            {/* Sidebar */}
             <div style={{
-                width: '250px',
-                height: '100vh',
+                width: '85%',
+                maxWidth: '300px',
+                height: '100%',
                 backgroundColor: 'white',
                 padding: '20px',
                 display: 'flex',
                 flexDirection: 'column',
                 position: 'fixed',
-                left: isSidebarOpen ? 0 : '-250px',
+                left: isSidebarOpen ? 0 : '-100%',
                 top: 0,
-                transition: 'left 0.3s ease',
+                bottom: 0,
+                transition: 'all 0.3s ease',
                 boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
                 zIndex: 999,
                 overflowY: 'auto',
-                WebkitOverflowScrolling: 'touch' // For smooth scrolling on iOS
+                WebkitOverflowScrolling: 'touch',
+                transform: isSidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+                willChange: 'transform'
             }}>
                 <div style={{
                     position: 'sticky',
                     top: 0,
                     backgroundColor: 'white',
                     paddingBottom: '20px',
-                    zIndex: 2
+                    zIndex: 2,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '20px'
                 }}>
-                    <img 
-                        src={Logo} 
-                        alt="Enliten Academy" 
-                        style={{ 
-                            width: '150px',
-                            marginBottom: '20px' 
-                        }} 
-                    />
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <img 
+                            src={Logo} 
+                            alt="Enliten Academy" 
+                            style={{ 
+                                width: '150px'
+                            }} 
+                        />
+                        <button
+                            onClick={() => setIsSidebarOpen(false)}
+                            style={{
+                                padding: '8px',
+                                borderRadius: '50%',
+                                border: 'none',
+                                backgroundColor: '#f5f5f5',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
                     <p style={{ 
                         color: '#666', 
-                        fontSize: '12px', 
-                        marginBottom: '10px',
+                        fontSize: '12px',
                         textTransform: 'uppercase',
-                        letterSpacing: '1px'
+                        letterSpacing: '1px',
+                        marginBottom: 0
                     }}>overview</p>
                 </div>
                 
