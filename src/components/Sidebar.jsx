@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Settings, BookOpen, MessageSquare, Globe, HelpCircle, LogOut, Menu, X } from 'react-feather';
 import { auth } from '../firebase/config';
@@ -9,6 +9,7 @@ export default function Sidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
+    const [isScrolled, setIsScrolled] = useState(false);
     
     const isActive = (path) => {
         return location.pathname === path;
@@ -33,6 +34,15 @@ export default function Sidebar() {
         { title: 'About', icon: <HelpCircle size={20} />, path: '/about' },
     ];
 
+    useEffect(() => {
+        const handleScroll = () => {
+            setIsScrolled(window.scrollY > 20);
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, []);
+
     return (
         <>
             <button
@@ -42,30 +52,63 @@ export default function Sidebar() {
                     top: '20px',
                     left: '20px',
                     zIndex: 1000,
-                    padding: '8px',
+                    padding: '8px 12px',
                     borderRadius: '8px',
                     border: 'none',
-                    backgroundColor: isSidebarOpen ? 'transparent' : '#8A2BE2',
-                    color: isSidebarOpen ? '#000' : '#fff',
+                    backgroundColor: isScrolled ? '#fff' : (isSidebarOpen ? 'transparent' : '#8A2BE2'),
+                    color: isScrolled ? '#000' : (isSidebarOpen ? '#000' : '#fff'),
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px'
+                    gap: '8px',
+                    boxShadow: isScrolled ? '0 2px 5px rgba(0,0,0,0.1)' : 'none',
+                    transition: 'all 0.3s ease'
                 }}
             >
-                {isSidebarOpen ? <Menu size={24} /> : (
-                    <>
-                        <Menu size={24} />
-                        <span style={{ 
-                            backgroundColor: '#8A2BE2', 
-                            color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '20px',
-                            whiteSpace: 'nowrap'
-                        }}>
-                            Get Yearly subscription @ ₹1 per day
-                        </span>
-                    </>
+                <div style={{ 
+                    position: 'relative', 
+                    width: '24px', 
+                    height: '24px'
+                }}>
+                    <span style={{
+                        position: 'absolute',
+                        width: '24px',
+                        height: '2px',
+                        backgroundColor: isScrolled ? '#000' : (isSidebarOpen ? '#000' : '#fff'),
+                        transition: 'all 0.3s ease',
+                        top: isSidebarOpen ? '11px' : '5px',
+                        transform: isSidebarOpen ? 'rotate(45deg)' : 'none'
+                    }} />
+                    <span style={{
+                        position: 'absolute',
+                        width: '24px',
+                        height: '2px',
+                        backgroundColor: isScrolled ? '#000' : (isSidebarOpen ? '#000' : '#fff'),
+                        transition: 'all 0.3s ease',
+                        top: '11px',
+                        opacity: isSidebarOpen ? 0 : 1
+                    }} />
+                    <span style={{
+                        position: 'absolute',
+                        width: '24px',
+                        height: '2px',
+                        backgroundColor: isScrolled ? '#000' : (isSidebarOpen ? '#000' : '#fff'),
+                        transition: 'all 0.3s ease',
+                        top: isSidebarOpen ? '11px' : '17px',
+                        transform: isSidebarOpen ? 'rotate(-45deg)' : 'none'
+                    }} />
+                </div>
+                {!isSidebarOpen && (
+                    <span style={{ 
+                        backgroundColor: '#8A2BE2', 
+                        color: 'white',
+                        padding: '4px 8px',
+                        borderRadius: '20px',
+                        whiteSpace: 'nowrap',
+                        fontSize: '14px'
+                    }}>
+                        Get Yearly subscription @ ₹1 per day
+                    </span>
                 )}
             </button>
 
@@ -82,19 +125,34 @@ export default function Sidebar() {
                 transition: 'left 0.3s ease',
                 boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
                 zIndex: 999,
-                overflowY: 'auto'
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch' // For smooth scrolling on iOS
             }}>
-                <img 
-                    src={Logo} 
-                    alt="Enliten Academy" 
-                    style={{ 
-                        width: '150px',
-                        marginBottom: '40px' 
-                    }} 
-                />
+                <div style={{
+                    position: 'sticky',
+                    top: 0,
+                    backgroundColor: 'white',
+                    paddingBottom: '20px',
+                    zIndex: 2
+                }}>
+                    <img 
+                        src={Logo} 
+                        alt="Enliten Academy" 
+                        style={{ 
+                            width: '150px',
+                            marginBottom: '20px' 
+                        }} 
+                    />
+                    <p style={{ 
+                        color: '#666', 
+                        fontSize: '12px', 
+                        marginBottom: '10px',
+                        textTransform: 'uppercase',
+                        letterSpacing: '1px'
+                    }}>overview</p>
+                </div>
                 
                 <div style={{ flex: 1 }}>
-                    <p style={{ color: '#666', fontSize: '12px', marginBottom: '10px' }}>overview</p>
                     {menuItems.map((item, index) => (
                         <Link
                             key={index}

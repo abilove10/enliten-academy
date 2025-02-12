@@ -52,6 +52,17 @@ export default function Dashboard() {
         return () => unsubscribe();
     }, [navigate]);
 
+    useEffect(() => {
+        // Add or remove no-scroll class based on sidebar state on mobile
+        if (window.innerWidth <= 768) {
+            document.body.classList.toggle('no-scroll', isSidebarOpen);
+        }
+        
+        return () => {
+            document.body.classList.remove('no-scroll');
+        };
+    }, [isSidebarOpen]);
+
     if (!user || !userData) return <div>Loading...</div>;
 
     return (
