@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Settings, BookOpen, MessageSquare, Globe, HelpCircle, LogOut, Menu, X, Bell } from 'react-feather';
-import { auth } from '../../Enliten-Backend/firebase/config';
 import { config } from '../utils/config';
 import Logo from '../assets/logo/logo.png';
 import { useSidebar } from '../context/SidebarContext';
 import defaultAvatar from '../assets/images/default-avatar.png'; // Make sure to add this image
+import { api } from '../utils/api';
 
 const API_URL = config.API_URL;
 
@@ -17,6 +17,7 @@ export default function Sidebar() {
     const [userProfile, setUserProfile] = useState(null);
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     
     const isActive = (path) => {
         return location.pathname === path;
@@ -24,37 +25,11 @@ export default function Sidebar() {
 
     const handleLogout = async () => {
         try {
-            // Sign out from Firebase
-            await auth.signOut();
-            
-            // Get the token before removing it
-            const token = localStorage.getItem('token');
-            
-            // Call backend logout endpoint if token exists
-            if (token) {
-                try {
-                    await fetch(`${API_URL}/api/auth/logout`, {
-                        method: 'POST',
-                        headers: {
-                            'Authorization': `Bearer ${token}`,
-                            'Content-Type': 'application/json'
-                        },
-                        credentials: 'include'
-                    });
-                } catch (error) {
-                    console.warn('Error calling logout endpoint:', error);
-                    // Continue with local logout even if server logout fails
-                }
-            }
-
-            // Clear local storage
+            await api.logout();
             localStorage.removeItem('token');
-            
-            // Navigate to login page
             navigate('/', { replace: true });
         } catch (error) {
-            console.error("Error during logout:", error);
-            // Still try to clear local state even if there's an error
+            console.error('Logout error:', error);
             localStorage.removeItem('token');
             navigate('/', { replace: true });
         }
@@ -79,17 +54,58 @@ export default function Sidebar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
-    useEffect(() => {
-        // Get current user profile
-        const user = auth.currentUser;
-        if (user) {
+    // Memoize the fetch function
+    const fetchUserProfile = useCallback(async () => {
+        try {
+            // Only fetch if we don't have user data and are in loading state
+            if (!isLoading) return;
+
+            const userData = await api.fetchUserData();
+            console.log('Fetched user data:', userData);
+
             setUserProfile({
-                name: user.displayName,
-                email: user.email,
-                photoURL: user.photoURL || defaultAvatar
+                name: userData.name || 'Student',
+                email: userData.email || '',
+                photoURL: userData.photo_url || defaultAvatar
             });
+        } catch (error) {
+            console.error('Error fetching user profile:', error);
+            setUserProfile({
+                name: 'Student',
+                email: '',
+                photoURL: defaultAvatar
+            });
+        } finally {
+            setIsLoading(false);
+        }
+    }, [isLoading]); // Only depend on isLoading state
+
+    // Use the memoized fetch function once
+    useEffect(() => {
+        fetchUserProfile();
+    }, [fetchUserProfile]);
+
+    // Memoize notifications fetch
+    const fetchNotifications = useCallback(async () => {
+        try {
+            const response = await api.fetchData('/api/notifications');
+            setNotifications(response);
+        } catch (error) {
+            if (error.status === 429) {
+                console.log('Rate limited, will retry later');
+                return;
+            }
+            console.error('Error fetching notifications:', error);
         }
     }, []);
+
+    // Notifications polling with rate limit consideration
+    useEffect(() => {
+        fetchNotifications();
+        // Poll less frequently - every 60 seconds instead of 30
+        const interval = setInterval(fetchNotifications, 60000);
+        return () => clearInterval(interval);
+    }, [fetchNotifications]);
 
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -103,31 +119,6 @@ export default function Sidebar() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showNotifications]);
-
-    useEffect(() => {
-        const fetchNotifications = async () => {
-            try {
-                const token = localStorage.getItem('token');
-                const response = await fetch(`${API_URL}/api/notifications`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-                if (response.ok) {
-                    const data = await response.json();
-                    setNotifications(data);
-                }
-            } catch (error) {
-                console.error('Error fetching notifications:', error);
-            }
-        };
-
-        fetchNotifications();
-        // You might want to add a polling interval here
-        const interval = setInterval(fetchNotifications, 30000); // every 30 seconds
-
-        return () => clearInterval(interval);
-    }, []);
 
     const ProfileSection = () => (
         <div style={{
@@ -146,6 +137,13 @@ export default function Sidebar() {
                     borderRadius: '50%',
                     marginRight: '12px',
                     objectFit: 'cover'
+                }}
+                onError={(e) => {
+                    // Prevent infinite loop by checking if already using default avatar
+                    if (e.target.src !== defaultAvatar) {
+                        console.log('Image load error, falling back to default avatar');
+                        e.target.src = defaultAvatar;
+                    }
                 }}
             />
             <div style={{ flex: 1 }}>

@@ -1,10 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { auth, db } from '../../Enliten-Backend/firebase/config';
+import React, { useEffect, useState, useCallback, createContext, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Target, Award } from 'react-feather';
 import Sidebar from '../components/Sidebar';
-import { collection, query, where, getDocs } from 'firebase/firestore';
-import { doc, getDoc } from 'firebase/firestore';
 import { useSidebar } from '../context/SidebarContext';
 import { Bar } from 'react-chartjs-2';
 import {
@@ -31,6 +28,9 @@ ChartJS.register(
 
 const API_URL = config.API_URL;
 
+// Create a context for user data
+export const UserContext = createContext(null);
+
 export default function Dashboard() {
     const [user, setUser] = useState(null);
     const [userData, setUserData] = useState(null);
@@ -44,107 +44,103 @@ export default function Dashboard() {
     const isMobile = window.innerWidth <= 768;
     const [contentWidth, setContentWidth] = useState('100%');
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [error, setError] = useState(null);
 
-    useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
-            navigate('/', { replace: true });
-            return;
-        }
-
-        fetchUserData();
-    }, [navigate]);
-
-    const fetchUserData = async () => {
+    // Create a memoized auth check function
+    const checkAuth = useCallback(async () => {
         try {
-            setLoading(true);
+            console.log('Checking authentication...');
             const token = localStorage.getItem('token');
+            
             if (!token) {
-                throw new Error('No authentication token found');
+                console.log('No token found, redirecting to login');
+                navigate('/', { replace: true });
+                return false;
             }
 
-            console.log('Making API request to:', API_URL);
+            // Verify token with backend
+            const response = await api.fetchUserData();
+            if (!response) {
+                console.log('Invalid session, redirecting to login');
+                localStorage.removeItem('token');
+                navigate('/', { replace: true });
+                return false;
+            }
 
+            setUserData(response);
+            return true;
+        } catch (error) {
+            console.error('Auth check failed:', error);
+            localStorage.removeItem('token');
+            navigate('/', { replace: true });
+            return false;
+        }
+    }, [navigate]);
+
+    // Use the checkAuth function in useEffect
+    useEffect(() => {
+        checkAuth();
+    }, [checkAuth]);
+
+    // Modify the fetchUserData function
+    const fetchUserData = useCallback(async () => {
+        try {
+            if (!(await checkAuth())) return;
+
+            setLoading(true);
+            console.log('Fetching user data...');
+            
+            const token = localStorage.getItem('token');
             const response = await fetch(`${API_URL}/api/user/data`, {
-                method: 'GET',
-                credentials: 'include',
                 headers: {
                     'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                }
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
             });
+
+            console.log('User data response status:', response.status);
 
             if (!response.ok) {
                 if (response.status === 401) {
+                    console.log('Unauthorized response, clearing token');
                     localStorage.removeItem('token');
                     navigate('/', { replace: true });
                     return;
                 }
-                const errorText = await response.text();
-                throw new Error(`Failed to fetch user data: ${errorText}`);
+                throw new Error('Failed to fetch user data');
             }
 
-            const userData = await response.json();
-            console.log('Received user data:', userData);
+            const data = await response.json();
+            console.log('Received user data:', data);
             
-            setUserData(userData);
-            
-            // Only attempt Firestore operations if we have the necessary data
-            if (userData.uid) {
-                try {
-                    const userDocRef = doc(db, "users", userData.uid);
-                    const userDocSnap = await getDoc(userDocRef);
-                    
-                    if (userDocSnap.exists()) {
-                        const firestoreData = userDocSnap.data();
-                        setUserData(prevData => ({
-                            ...prevData,
-                            ...firestoreData
-                        }));
-
-                        // Process subject analysis data if it exists
-                        if (firestoreData.subject_analysis) {
-                            setSubjectData({
-                                labels: Object.keys(firestoreData.subject_analysis),
-                                values: Object.values(firestoreData.subject_analysis)
-                            });
-                        }
-
-                        // Fetch assessments if they exist
-                        if (firestoreData.assessment_count > 0) {
-                            try {
-                                const assessmentsRef = collection(db, "assessments");
-                                const q = query(assessmentsRef, where("userId", "==", userData.uid));
-                                const querySnapshot = await getDocs(q);
-                                const assessmentData = [];
-                                querySnapshot.forEach((doc) => {
-                                    assessmentData.push({ id: doc.id, ...doc.data() });
-                                });
-                                setAssessments(assessmentData);
-                            } catch (assessmentError) {
-                                console.warn('Failed to fetch assessments:', assessmentError);
-                                // Continue without assessment data
-                            }
-                        }
-                    }
-                } catch (firestoreError) {
-                    console.warn('Failed to fetch Firestore data:', firestoreError);
-                    // Continue with just the API data
-                }
+            if (!data) {
+                throw new Error('No data received');
             }
+            
+            setUserData(data);
         } catch (err) {
-            console.error('Error fetching user data:', err);
-            setError(err.message || 'Failed to load user data');
-            if (err.message.includes('authentication') || err.message.includes('401')) {
+            console.error('Error in fetchUserData:', err);
+            setError(err.message);
+            
+            if (err.message.includes('401') || err.message.includes('unauthorized')) {
                 localStorage.removeItem('token');
                 navigate('/', { replace: true });
             }
         } finally {
             setLoading(false);
         }
-    };
+    }, [navigate, checkAuth]);
+
+    // Use the fetchUserData function in an effect
+    useEffect(() => {
+        const authenticateAndFetchData = async () => {
+            if (await checkAuth()) {
+                fetchUserData();
+            }
+        };
+        authenticateAndFetchData();
+    }, [checkAuth, fetchUserData]);
 
     useEffect(() => {
         // Add or remove no-scroll class based on sidebar state on mobile
@@ -285,9 +281,18 @@ export default function Dashboard() {
         ]
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/');
+    const handleLogout = async () => {
+        try {
+            // Call backend logout endpoint
+            await api.logout();
+            localStorage.removeItem('token');
+            navigate('/', { replace: true });
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Still remove token and redirect even if logout fails
+            localStorage.removeItem('token');
+            navigate('/', { replace: true });
+        }
     };
 
     if (loading) {
@@ -331,206 +336,232 @@ export default function Dashboard() {
         );
     }
 
-    return (
-        <div style={{ 
-            display: 'flex',
-            minHeight: '100vh',
-            position: 'relative',
-            overflow: isSidebarOpen && window.innerWidth <= 768 ? 'hidden' : 'auto'
-        }}>
-            <Sidebar />
+    if (!userData) {
+        return (
             <div style={{ 
-                width: contentWidth,
-                marginLeft: isSidebarOpen && window.innerWidth > 768 ? '300px' : '0',
-                padding: '30px',
-                backgroundColor: '#FCF6FF',
-                transition: 'all 0.3s ease',
-                position: 'relative',
-                zIndex: 1
+                display: 'flex', 
+                flexDirection: 'column',
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh',
+                padding: '20px'
             }}>
-                {!isSidebarOpen && (
-                    <div style={{ height: '60px' }} /> // Spacer for the menu button
-                )}
-                
-                {isSidebarOpen && (
-                    <div style={{
-                        backgroundColor: '#8A2BE2',
+                <p style={{ color: 'red', marginBottom: '20px' }}>No user data available</p>
+                <button 
+                    onClick={() => fetchUserData()}
+                    style={{
                         padding: '10px 20px',
-                        borderRadius: '30px',
+                        borderRadius: '8px',
+                        backgroundColor: '#8A2BE2',
                         color: 'white',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        marginBottom: '20px'
-                    }}>
-                        <span style={{ marginRight: '10px' }}>🎉</span>
-                        Get Yearly subscription @ ₹1 per day
-                    </div>
-                )}
+                        border: 'none',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
 
+    // Provide user data to children
+    return (
+        <UserContext.Provider value={userData}>
+            <div style={{ display: 'flex', minHeight: '100vh' }}>
+                <Sidebar />
                 <div style={{ 
-                    marginBottom: '30px',
-                    marginTop: isSidebarOpen ? '0' : '20px'
+                    width: contentWidth,
+                    marginLeft: isSidebarOpen && window.innerWidth > 768 ? '300px' : '0',
+                    padding: '30px',
+                    backgroundColor: '#FCF6FF',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    zIndex: 1
                 }}>
-                    <p style={{ 
-                        color: '#666',
-                        fontSize: '14px',
-                        marginBottom: '8px'
-                    }}>Welcome Back</p>
-                    <h1 style={{
-                        fontSize: '28px',
-                        fontWeight: '600',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                    }}>
-                        Hello, {userData.name || 'Student'} 
-                        <span style={{ fontSize: '24px' }}>👋</span>
-                    </h1>
-                </div>
+                    {!isSidebarOpen && (
+                        <div style={{ height: '60px' }} /> // Spacer for the menu button
+                    )}
+                    
+                    {isSidebarOpen && (
+                        <div style={{
+                            backgroundColor: '#8A2BE2',
+                            padding: '10px 20px',
+                            borderRadius: '30px',
+                            color: 'white',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            marginBottom: '20px'
+                        }}>
+                            <span style={{ marginRight: '10px' }}>🎉</span>
+                            Get Yearly subscription @ ₹1 per day
+                        </div>
+                    )}
 
-                <div style={{
-                    marginBottom: '30px'
-                }}>
+                    <div style={{ 
+                        marginBottom: '30px',
+                        marginTop: isSidebarOpen ? '0' : '20px'
+                    }}>
+                        <p style={{ 
+                            color: '#666',
+                            fontSize: '14px',
+                            marginBottom: '8px'
+                        }}>Welcome Back</p>
+                        <h1 style={{
+                            fontSize: '28px',
+                            fontWeight: '600',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px'
+                        }}>
+                            Hello, {userData.name || 'Student'} 
+                            <span style={{ fontSize: '24px' }}>👋</span>
+                        </h1>
+                    </div>
+
+                    <div style={{
+                        marginBottom: '30px'
+                    }}>
+                        <h2 style={{
+                            fontSize: '24px',
+                            fontWeight: '600',
+                            marginBottom: '20px'
+                        }}>Subject Analysis</h2>
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '20px',
+                            borderRadius: '15px',
+                            height: '400px',
+                            width: '100%',
+                            overflowX: 'auto',
+                            overflowY: 'hidden',
+                            transition: 'width 0.3s ease'
+                        }}>
+                            <div style={{
+                                minWidth: '800px',
+                                height: '100%'
+                            }}>
+                                <Bar options={chartOptions} data={chartData} />
+                            </div>
+                        </div>
+                    </div>
+
                     <h2 style={{
                         fontSize: '24px',
                         fontWeight: '600',
                         marginBottom: '20px'
-                    }}>Subject Analysis</h2>
+                    }}>Study statistics</h2>
                     <div style={{
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        borderRadius: '15px',
-                        height: '400px',
-                        width: '100%',
-                        overflowX: 'auto',
-                        overflowY: 'hidden',
-                        transition: 'width 0.3s ease'
+                        display: 'grid',
+                        gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+                        gap: '20px',
+                        marginBottom: '30px'
                     }}>
                         <div style={{
-                            minWidth: '800px',
-                            height: '100%'
+                            backgroundColor: 'white',
+                            padding: '20px',
+                            borderRadius: '15px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px'
                         }}>
-                            <Bar options={chartOptions} data={chartData} />
+                            <Award size={24} color="#8A2BE2" />
+                            <div>
+                                <p style={{ color: '#666' }}>Ranking</p>
+                                <h2 style={{ margin: '5px 0' }}>{userData.rank || 'N/A'}</h2>
+                            </div>
                         </div>
-                    </div>
-                </div>
 
-                <h2 style={{
-                    fontSize: '24px',
-                    fontWeight: '600',
-                    marginBottom: '20px'
-                }}>Study statistics</h2>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-                    gap: '20px',
-                    marginBottom: '30px'
-                }}>
-                    <div style={{
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        borderRadius: '15px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px'
-                    }}>
-                        <Award size={24} color="#8A2BE2" />
-                        <div>
-                            <p style={{ color: '#666' }}>Ranking</p>
-                            <h2 style={{ margin: '5px 0' }}>{userData.rank || 'N/A'}</h2>
-                        </div>
-                    </div>
-
-                    <div style={{
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        borderRadius: '15px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px'
-                    }}>
-                        <Target size={24} color="#8A2BE2" />
-                        <div>
-                            <p style={{ color: '#666' }}>Score</p>
-                            <h2 style={{ margin: '5px 0' }}>{userData.total_score}/100</h2>
-                        </div>
-                    </div>
-
-                    <div style={{
-                        backgroundColor: 'white',
-                        padding: '20px',
-                        borderRadius: '15px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px'
-                    }}>
-                        <Target size={24} color="#8A2BE2" />
-                        <div>
-                            <p style={{ color: '#666' }}>Accuracy</p>
-                            <h2 style={{ margin: '5px 0' }}>{userData.accuracy}%</h2>
-                        </div>
-                    </div>
-                </div>
-
-                <h2 style={{
-                    fontSize: '24px',
-                    fontWeight: '600',
-                    marginBottom: '20px',
-                    marginTop: '40px'
-                }}>Table analysis</h2>
-                {userData.assessment_count === 0 ? (
-                    <div style={{
-                        backgroundColor: 'white',
-                        padding: '40px',
-                        borderRadius: '15px',
-                        textAlign: 'center',
-                        color: '#666',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
-                    }}>
-                        No Sufficient Data
-                    </div>
-                ) : (
-                    <div style={{
-                        ...tableStyles.container,
-                        transition: 'width 0.3s ease',
-                        width: '100%'
-                    }}>
                         <div style={{
-                            overflowX: 'auto',
+                            backgroundColor: 'white',
+                            padding: '20px',
+                            borderRadius: '15px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px'
+                        }}>
+                            <Target size={24} color="#8A2BE2" />
+                            <div>
+                                <p style={{ color: '#666' }}>Score</p>
+                                <h2 style={{ margin: '5px 0' }}>{userData.total_score}/100</h2>
+                            </div>
+                        </div>
+
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '20px',
+                            borderRadius: '15px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '15px'
+                        }}>
+                            <Target size={24} color="#8A2BE2" />
+                            <div>
+                                <p style={{ color: '#666' }}>Accuracy</p>
+                                <h2 style={{ margin: '5px 0' }}>{userData.accuracy}%</h2>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h2 style={{
+                        fontSize: '24px',
+                        fontWeight: '600',
+                        marginBottom: '20px',
+                        marginTop: '40px'
+                    }}>Table analysis</h2>
+                    {userData.assessment_count === 0 ? (
+                        <div style={{
+                            backgroundColor: 'white',
+                            padding: '40px',
+                            borderRadius: '15px',
+                            textAlign: 'center',
+                            color: '#666',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+                        }}>
+                            No Sufficient Data
+                        </div>
+                    ) : (
+                        <div style={{
+                            ...tableStyles.container,
+                            transition: 'width 0.3s ease',
                             width: '100%'
                         }}>
-                            <table style={tableStyles.table}>
-                                <thead>
-                                    <tr>
-                                        <th style={tableStyles.th}>No. Questions</th>
-                                        <th style={tableStyles.th}>Correct</th>
-                                        <th style={tableStyles.th}>Incorrect</th>
-                                        <th style={tableStyles.th}>Skipped</th>
-                                        <th style={tableStyles.th}>Accuracy</th>
-                                        <th style={tableStyles.th}>Score</th>
-                                        <th style={tableStyles.th}>Duration</th>
-                                        <th style={tableStyles.th}>Rank</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {assessments.map((assessment) => (
-                                        <tr key={assessment.id} style={tableStyles.tr}>
-                                            <td style={{...tableStyles.td, ...tableStyles['td:first-child']}}>{assessment.totalQuestions}</td>
-                                            <td style={tableStyles.td}>{assessment.correct}</td>
-                                            <td style={tableStyles.td}>{assessment.incorrect}</td>
-                                            <td style={tableStyles.td}>{assessment.skipped}</td>
-                                            <td style={tableStyles.td}>{assessment.accuracy}%</td>
-                                            <td style={tableStyles.td}>{assessment.score}</td>
-                                            <td style={tableStyles.td}>{assessment.duration}</td>
-                                            <td style={{...tableStyles.td, ...tableStyles['td:last-child']}}>{assessment.rank}</td>
+                            <div style={{
+                                overflowX: 'auto',
+                                width: '100%'
+                            }}>
+                                <table style={tableStyles.table}>
+                                    <thead>
+                                        <tr>
+                                            <th style={tableStyles.th}>No. Questions</th>
+                                            <th style={tableStyles.th}>Correct</th>
+                                            <th style={tableStyles.th}>Incorrect</th>
+                                            <th style={tableStyles.th}>Skipped</th>
+                                            <th style={tableStyles.th}>Accuracy</th>
+                                            <th style={tableStyles.th}>Score</th>
+                                            <th style={tableStyles.th}>Duration</th>
+                                            <th style={tableStyles.th}>Rank</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {assessments.map((assessment) => (
+                                            <tr key={assessment.id} style={tableStyles.tr}>
+                                                <td style={{...tableStyles.td, ...tableStyles['td:first-child']}}>{assessment.totalQuestions}</td>
+                                                <td style={tableStyles.td}>{assessment.correct}</td>
+                                                <td style={tableStyles.td}>{assessment.incorrect}</td>
+                                                <td style={tableStyles.td}>{assessment.skipped}</td>
+                                                <td style={tableStyles.td}>{assessment.accuracy}%</td>
+                                                <td style={tableStyles.td}>{assessment.score}</td>
+                                                <td style={tableStyles.td}>{assessment.duration}</td>
+                                                <td style={{...tableStyles.td, ...tableStyles['td:last-child']}}>{assessment.rank}</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    )}
+                </div>
             </div>
-        </div>
+        </UserContext.Provider>
     );
 } 

@@ -58,22 +58,27 @@ export default function Signup() {
     const handlePhoneSignIn = async () => {
         try {
             setError('');
+            setIsLoading(true);
             
-            // Validate phone number before proceeding
-            if (!validatePhoneNumber(phoneNumber)) {
-                setError('Please enter a valid Indian phone number');
-                return;
+            // Validate and format phone number
+            const cleanNumber = phoneNumber.replace(/\D/g, '');
+            if (!cleanNumber.startsWith('91') && cleanNumber.length === 10) {
+                setPhoneNumber(`91${cleanNumber}`);
             }
 
-            setIsLoading(true);
-            const formattedNumber = `+${phoneNumber}`; // Ensure proper format with country code
+            if (!validatePhoneNumber(cleanNumber)) {
+                throw new Error('Please enter a valid Indian phone number');
+            }
+
+            const response = await api.requestOTP({ phoneNumber: `+${cleanNumber}` });
             
-            const response = await api.requestOTP({ phoneNumber: formattedNumber });
             if (response.success) {
                 setShowOTPInput(true);
+            } else {
+                throw new Error(response.error || 'Failed to send OTP');
             }
         } catch (err) {
-            setError(err.message || 'Failed to send OTP');
+            setError(err.message);
         } finally {
             setIsLoading(false);
         }
@@ -94,16 +99,26 @@ export default function Signup() {
 
             setIsLoading(true);
             setError('');
+            console.log('Verifying OTP...');
+            
             const response = await api.verifyOTP({
                 phoneNumber: `+${phoneNumber}`,
                 otp: verificationCode
             });
             
+            console.log('OTP verification response:', response);
+            
             if (response.token) {
+                console.log('Token received, setting in localStorage');
                 localStorage.setItem('token', response.token);
-                window.location.href = '/dashboard';
+                console.log('Navigating to dashboard...');
+                navigate('/dashboard', { replace: true });  // Ensure replace: true is used
+            } else {
+                console.log('No token received in response');
+                setError('Authentication failed - no token received');
             }
         } catch (err) {
+            console.error('OTP verification error:', err);
             setError(err.message || 'Failed to verify OTP');
         } finally {
             setIsLoading(false);
@@ -112,97 +127,24 @@ export default function Signup() {
 
     const handleGoogleSignIn = async () => {
         try {
-            setError('');
             setIsLoading(true);
+            setError('');
+            console.log('Starting Google Sign In process...');
             
-            const response = await fetch(`${API_URL}/api/auth/google-signin-url`, {
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Failed to get Google sign-in URL');
+            const response = await api.googleSignIn();
+            console.log('Google Sign In response:', response);
+            
+            if (response.token) {
+                console.log('Token received, saving to localStorage');
+                localStorage.setItem('token', response.token);
+                console.log('Navigating to dashboard...');
+                navigate('/dashboard', { replace: true });
+            } else {
+                throw new Error('No token received from Google Sign In');
             }
-
-            const { url } = await response.json();
-            console.log("Got sign-in URL:", url);
-            
-            const popup = window.open(
-                url, 
-                'Google Sign In',
-                'width=500,height=600,menubar=no,toolbar=no,location=no'
-            );
-
-            if (!popup) {
-                throw new Error('Popup was blocked. Please allow popups for this site.');
-            }
-
-            let isProcessing = false; // Add flag to prevent double processing
-
-            const messageHandler = async (event) => {
-                try {
-                    if (event.origin !== window.location.origin) return;
-                    
-                    console.log("Received message:", event.data);
-                    
-                    if (event.data.type === 'GOOGLE_SIGN_IN_SUCCESS' && !isProcessing) {
-                        isProcessing = true; // Set flag
-                        const { code } = event.data;
-                        console.log("Got auth code:", code);
-                        
-                        try {
-                            const tokenResponse = await fetch(`${API_URL}/api/auth/google-signin-callback`, {
-                                method: 'POST',
-                                credentials: 'include',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json'
-                                },
-                                body: JSON.stringify({ code })
-                            });
-
-                            console.log("Token response status:", tokenResponse.status);
-                            
-                            if (!tokenResponse.ok) {
-                                const errorData = await tokenResponse.json();
-                                throw new Error(errorData.error || 'Failed to exchange code for token');
-                            }
-
-                            const data = await tokenResponse.json();
-                            console.log("Token response data:", data);
-                            
-                            if (data.token) {
-                                localStorage.setItem('token', data.token);
-                                window.location.href = '/dashboard';
-                            } else {
-                                throw new Error('No token received');
-                            }
-                        } catch (err) {
-                            console.error('Token exchange error:', err);
-                            throw err;
-                        }
-                    }
-                    
-                    if (event.data.type === 'GOOGLE_SIGN_IN_ERROR') {
-                        throw new Error(event.data.error || 'Failed to sign in with Google');
-                    }
-                } catch (err) {
-                    console.error('Google Sign-In Error:', err);
-                    setError(err.message || 'Failed to complete Google sign-in');
-                    window.removeEventListener('message', messageHandler);
-                    popup?.close();
-                }
-            };
-
-            window.addEventListener('message', messageHandler);
-            
-        } catch (err) {
-            console.error('Google Sign-In Init Error:', err);
-            setError(err.message || 'Failed to initiate Google sign-in');
+        } catch (error) {
+            console.error('Google Sign In error:', error);
+            setError(error.message || 'Failed to sign in with Google');
         } finally {
             setIsLoading(false);
         }

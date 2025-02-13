@@ -1,36 +1,24 @@
 import { Navigate } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { api } from '../utils/api';
 
-export default function ProtectedRoute({ children }) {
-    const [loading, setLoading] = useState(true);
-    const [authenticated, setAuthenticated] = useState(false);
+const ProtectedRoute = ({ children }) => {
+    const token = localStorage.getItem('token');
+    
+    const validateToken = async () => {
+        try {
+            await api.fetchUserData(); // Verify token is valid
+            return true;
+        } catch (error) {
+            localStorage.removeItem('token');
+            return false;
+        }
+    };
 
-    useEffect(() => {
-        const checkAuth = () => {
-            const token = localStorage.getItem('token');
-            setAuthenticated(!!token);
-            setLoading(false);
-        };
-
-        checkAuth();
-    }, []);
-
-    if (loading) {
-        return (
-            <div style={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
-                alignItems: 'center', 
-                height: '100vh' 
-            }}>
-                Loading...
-            </div>
-        );
-    }
-
-    if (!authenticated) {
+    if (!token || !validateToken()) {
         return <Navigate to="/" replace />;
     }
 
     return children;
-} 
+};
+
+export default ProtectedRoute; 

@@ -4,6 +4,7 @@ export default function GoogleCallback() {
     useEffect(() => {
         const handleCallback = () => {
             try {
+                console.log('Processing Google callback...');
                 const params = new URLSearchParams(window.location.search);
                 const code = params.get('code');
                 const error = params.get('error');
@@ -19,12 +20,14 @@ export default function GoogleCallback() {
                 }
                 
                 if (code) {
+                    console.log('Received authorization code');
                     // Send message to parent window
                     window.opener?.postMessage({
                         type: 'GOOGLE_SIGN_IN_SUCCESS',
                         code
                     }, window.location.origin);
                 } else {
+                    console.error('No authorization code received');
                     window.opener?.postMessage({
                         type: 'GOOGLE_SIGN_IN_ERROR',
                         error: 'No authorization code received'
