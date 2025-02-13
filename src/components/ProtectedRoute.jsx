@@ -1,5 +1,4 @@
 import { Navigate } from 'react-router-dom';
-import { auth } from '../firebase/config';
 import { useEffect, useState } from 'react';
 
 export default function ProtectedRoute({ children }) {
@@ -7,20 +6,30 @@ export default function ProtectedRoute({ children }) {
     const [authenticated, setAuthenticated] = useState(false);
 
     useEffect(() => {
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            setAuthenticated(!!user);
+        const checkAuth = () => {
+            const token = localStorage.getItem('token');
+            setAuthenticated(!!token);
             setLoading(false);
-        });
+        };
 
-        return () => unsubscribe();
+        checkAuth();
     }, []);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh' 
+            }}>
+                Loading...
+            </div>
+        );
     }
 
     if (!authenticated) {
-        return <Navigate to="/signup" />;
+        return <Navigate to="/" replace />;
     }
 
     return children;

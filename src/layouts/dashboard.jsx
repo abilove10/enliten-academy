@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { auth, db } from '../firebase/config';
+import { auth, db } from '../../Enliten-Backend/firebase/config';
 import { useNavigate } from 'react-router-dom';
 import { Target, Award } from 'react-feather';
 import Sidebar from '../components/Sidebar';
@@ -16,6 +16,8 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
+import { api } from '../utils/api';
+import { config } from '../utils/config';
 
 // Register ChartJS components
 ChartJS.register(
@@ -26,6 +28,8 @@ ChartJS.register(
     Tooltip,
     Legend
 );
+
+const API_URL = config.API_URL;
 
 export default function Dashboard() {
     const [user, setUser] = useState(null);
@@ -39,50 +43,108 @@ export default function Dashboard() {
     const { isSidebarOpen } = useSidebar();
     const isMobile = window.innerWidth <= 768;
     const [contentWidth, setContentWidth] = useState('100%');
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
 
     useEffect(() => {
-        const fetchUserData = async (user) => {
-            try {
-                const userDoc = await getDoc(doc(db, "users", user.uid));
-                if (userDoc.exists()) {
-                    const data = userDoc.data();
-                    setUserData(data);
-                    
-                    // Process subject analysis data
-                    const subjects = data.subject_analysis;
-                    setSubjectData({
-                        labels: Object.keys(subjects),
-                        values: Object.values(subjects)
-                    });
+        const token = localStorage.getItem('token');
+        if (!token) {
+            navigate('/', { replace: true });
+            return;
+        }
 
-                    // Fetch assessments if assessment_count > 0
-                    if (data.assessment_count > 0) {
-                        const assessmentsRef = collection(db, "assessment");
-                        const q = query(assessmentsRef, where("userId", "==", user.uid));
-                        const querySnapshot = await getDocs(q);
-                        const assessmentData = [];
-                        querySnapshot.forEach((doc) => {
-                            assessmentData.push({ id: doc.id, ...doc.data() });
-                        });
-                        setAssessments(assessmentData);
-                    }
-                }
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-
-        const unsubscribe = auth.onAuthStateChanged((user) => {
-            if (user) {
-                setUser(user);
-                fetchUserData(user);
-            } else {
-                navigate('/signup');
-            }
-        });
-
-        return () => unsubscribe();
+        fetchUserData();
     }, [navigate]);
+
+    const fetchUserData = async () => {
+        try {
+            setLoading(true);
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            console.log('Making API request to:', API_URL);
+
+            const response = await fetch(`${API_URL}/api/user/data`, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                if (response.status === 401) {
+                    localStorage.removeItem('token');
+                    navigate('/', { replace: true });
+                    return;
+                }
+                const errorText = await response.text();
+                throw new Error(`Failed to fetch user data: ${errorText}`);
+            }
+
+            const userData = await response.json();
+            console.log('Received user data:', userData);
+            
+            setUserData(userData);
+            
+            // Only attempt Firestore operations if we have the necessary data
+            if (userData.uid) {
+                try {
+                    const userDocRef = doc(db, "users", userData.uid);
+                    const userDocSnap = await getDoc(userDocRef);
+                    
+                    if (userDocSnap.exists()) {
+                        const firestoreData = userDocSnap.data();
+                        setUserData(prevData => ({
+                            ...prevData,
+                            ...firestoreData
+                        }));
+
+                        // Process subject analysis data if it exists
+                        if (firestoreData.subject_analysis) {
+                            setSubjectData({
+                                labels: Object.keys(firestoreData.subject_analysis),
+                                values: Object.values(firestoreData.subject_analysis)
+                            });
+                        }
+
+                        // Fetch assessments if they exist
+                        if (firestoreData.assessment_count > 0) {
+                            try {
+                                const assessmentsRef = collection(db, "assessments");
+                                const q = query(assessmentsRef, where("userId", "==", userData.uid));
+                                const querySnapshot = await getDocs(q);
+                                const assessmentData = [];
+                                querySnapshot.forEach((doc) => {
+                                    assessmentData.push({ id: doc.id, ...doc.data() });
+                                });
+                                setAssessments(assessmentData);
+                            } catch (assessmentError) {
+                                console.warn('Failed to fetch assessments:', assessmentError);
+                                // Continue without assessment data
+                            }
+                        }
+                    }
+                } catch (firestoreError) {
+                    console.warn('Failed to fetch Firestore data:', firestoreError);
+                    // Continue with just the API data
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching user data:', err);
+            setError(err.message || 'Failed to load user data');
+            if (err.message.includes('authentication') || err.message.includes('401')) {
+                localStorage.removeItem('token');
+                navigate('/', { replace: true });
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
         // Add or remove no-scroll class based on sidebar state on mobile
@@ -223,7 +285,51 @@ export default function Dashboard() {
         ]
     };
 
-    if (!user || !userData) return <div>Loading...</div>;
+    const handleLogout = () => {
+        localStorage.removeItem('token');
+        navigate('/');
+    };
+
+    if (loading) {
+        return (
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh' 
+            }}>
+                Loading...
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div style={{ 
+                display: 'flex', 
+                flexDirection: 'column',
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh',
+                padding: '20px'
+            }}>
+                <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>
+                <button 
+                    onClick={() => fetchUserData()}
+                    style={{
+                        padding: '10px 20px',
+                        borderRadius: '8px',
+                        backgroundColor: '#8A2BE2',
+                        color: 'white',
+                        border: 'none',
+                        cursor: 'pointer'
+                    }}
+                >
+                    Retry
+                </button>
+            </div>
+        );
+    }
 
     return (
         <div style={{ 

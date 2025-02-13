@@ -1,8 +1,6 @@
 import { useState, React } from "react";
-import { getAuth, signInWithPhoneNumber, RecaptchaVerifier, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { auth, googleProvider } from '../firebase/config';
 import { useNavigate } from 'react-router-dom';
-import { createUserDocument } from '../utils/userUtils';
+import { api } from '../utils/api';
 //images
 import avatar from '../assets/avatar.png'
 import Logo from '../assets/logo/logo.png'
@@ -10,6 +8,9 @@ import Logo from '../assets/logo/logo.png'
 //icons
 import {Phone} from 'react-feather'
 
+const API_URL = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000'
+    : 'https://api.enliten-academy.com';
 
 export default function Signup() {
     const [phoneNumber, setPhoneNumber] = useState('');
@@ -25,75 +26,183 @@ export default function Signup() {
        
       // Usage in a React component 
         const mobile = isMobile(); 
+
+    // Phone number validation function
+    const validatePhoneNumber = (number) => {
+        // Remove any non-digit characters
+        const cleanNumber = number.replace(/\D/g, '');
         
-    const setupRecaptcha = () => {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
-            'size': 'invisible'
-        });
+        // Check if it's a valid Indian phone number
+        const phoneRegex = /^(?:(?:\+|0{0,2})91(\s*[-]\s*)?|[0]?)?[6789]\d{9}$/;
+        return phoneRegex.test(cleanNumber);
     };
 
-    const handleContinue = async () => {
+    // Format phone number as user types
+    const handlePhoneNumberChange = (e) => {
+        let number = e.target.value.replace(/\D/g, '');
+        
+        // Format as Indian number
+        if (number.length > 0) {
+            if (!number.startsWith('91') && number.length === 10) {
+                number = '91' + number;
+            }
+            if (number.length > 12) {
+                number = number.slice(0, 12);
+            }
+        }
+        
+        setPhoneNumber(number);
+        setError(''); // Clear any existing errors
+    };
+
+    const handlePhoneSignIn = async () => {
         try {
             setError('');
-            if (!phoneNumber || phoneNumber.length !== 10) {
-                setError('Please enter a valid phone number');
+            
+            // Validate phone number before proceeding
+            if (!validatePhoneNumber(phoneNumber)) {
+                setError('Please enter a valid Indian phone number');
                 return;
             }
 
-            setupRecaptcha();
-            const formattedPhone = `+91${phoneNumber}`; // Adjust country code as needed
-            const appVerifier = window.recaptchaVerifier;
+            setIsLoading(true);
+            const formattedNumber = `+${phoneNumber}`; // Ensure proper format with country code
             
-            const confirmationResult = await signInWithPhoneNumber(auth, formattedPhone, appVerifier);
-            window.confirmationResult = confirmationResult;
-            setShowOTPInput(true);
+            const response = await api.requestOTP({ phoneNumber: formattedNumber });
+            if (response.success) {
+                setShowOTPInput(true);
+            }
         } catch (err) {
-            setError(err.message);
-            console.error(err);
+            setError(err.message || 'Failed to send OTP');
+        } finally {
+            setIsLoading(false);
         }
+    };
+
+    // Validate OTP input
+    const handleOTPChange = (e) => {
+        const otp = e.target.value.replace(/\D/g, '').slice(0, 6);
+        setVerificationCode(otp);
     };
 
     const verifyOTP = async () => {
         try {
-            const result = await window.confirmationResult.confirm(verificationCode);
-            const user = result.user;
-            console.log("User signed in:", user);
+            if (verificationCode.length !== 6) {
+                setError('Please enter a valid 6-digit OTP');
+                return;
+            }
+
+            setIsLoading(true);
+            setError('');
+            const response = await api.verifyOTP({
+                phoneNumber: `+${phoneNumber}`,
+                otp: verificationCode
+            });
             
-            // Create user document in Firestore
-            await createUserDocument(user);
-            
-            navigate('/dashboard');
+            if (response.token) {
+                localStorage.setItem('token', response.token);
+                window.location.href = '/dashboard';
+            }
         } catch (err) {
-            setError(err.message);
-            console.error(err);
+            setError(err.message || 'Failed to verify OTP');
+        } finally {
+            setIsLoading(false);
         }
     };
 
     const handleGoogleSignIn = async () => {
         try {
-            setIsLoading(true);
             setError('');
-            const result = await signInWithPopup(auth, googleProvider);
-            const user = result.user;
-            console.log("Google Sign in successful:", user);
+            setIsLoading(true);
             
-            // Create user document in Firestore
-            await createUserDocument(user);
-            
-            navigate('/dashboard');
-        } catch (err) {
-            let errorMessage = "An error occurred during Google sign in.";
-            
-            if (err.code === 'auth/popup-blocked') {
-                errorMessage = "Please enable popups for this website to sign in with Google.";
-            } else if (err.code === 'auth/popup-closed-by-user') {
-                errorMessage = "Sign in was cancelled. Please try again.";
-            } else if (err.code === 'auth/unauthorized-domain') {
-                errorMessage = "This domain is not authorized for Google sign in.";
+            const response = await fetch(`${API_URL}/api/auth/google-signin-url`, {
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to get Google sign-in URL');
             }
+
+            const { url } = await response.json();
+            console.log("Got sign-in URL:", url);
             
-            setError(errorMessage);
-            console.error("Google Sign in error:", err);
+            const popup = window.open(
+                url, 
+                'Google Sign In',
+                'width=500,height=600,menubar=no,toolbar=no,location=no'
+            );
+
+            if (!popup) {
+                throw new Error('Popup was blocked. Please allow popups for this site.');
+            }
+
+            let isProcessing = false; // Add flag to prevent double processing
+
+            const messageHandler = async (event) => {
+                try {
+                    if (event.origin !== window.location.origin) return;
+                    
+                    console.log("Received message:", event.data);
+                    
+                    if (event.data.type === 'GOOGLE_SIGN_IN_SUCCESS' && !isProcessing) {
+                        isProcessing = true; // Set flag
+                        const { code } = event.data;
+                        console.log("Got auth code:", code);
+                        
+                        try {
+                            const tokenResponse = await fetch(`${API_URL}/api/auth/google-signin-callback`, {
+                                method: 'POST',
+                                credentials: 'include',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json'
+                                },
+                                body: JSON.stringify({ code })
+                            });
+
+                            console.log("Token response status:", tokenResponse.status);
+                            
+                            if (!tokenResponse.ok) {
+                                const errorData = await tokenResponse.json();
+                                throw new Error(errorData.error || 'Failed to exchange code for token');
+                            }
+
+                            const data = await tokenResponse.json();
+                            console.log("Token response data:", data);
+                            
+                            if (data.token) {
+                                localStorage.setItem('token', data.token);
+                                window.location.href = '/dashboard';
+                            } else {
+                                throw new Error('No token received');
+                            }
+                        } catch (err) {
+                            console.error('Token exchange error:', err);
+                            throw err;
+                        }
+                    }
+                    
+                    if (event.data.type === 'GOOGLE_SIGN_IN_ERROR') {
+                        throw new Error(event.data.error || 'Failed to sign in with Google');
+                    }
+                } catch (err) {
+                    console.error('Google Sign-In Error:', err);
+                    setError(err.message || 'Failed to complete Google sign-in');
+                    window.removeEventListener('message', messageHandler);
+                    popup?.close();
+                }
+            };
+
+            window.addEventListener('message', messageHandler);
+            
+        } catch (err) {
+            console.error('Google Sign-In Init Error:', err);
+            setError(err.message || 'Failed to initiate Google sign-in');
         } finally {
             setIsLoading(false);
         }
@@ -101,40 +210,38 @@ export default function Signup() {
 
     const renderOTPInput = () => {
         if (!showOTPInput) return null;
+
         return (
-            <div style={{
-                width: '100%',
-                maxWidth: '400px',
-                marginBottom: '20px'
-            }}>
+            <div style={{ marginTop: '20px' }}>
                 <input
                     type="text"
-                    placeholder="Enter OTP"
                     value={verificationCode}
-                    onChange={(e) => setVerificationCode(e.target.value)}
+                    onChange={handleOTPChange}
+                    placeholder="Enter 6-digit OTP"
+                    maxLength="6"
                     style={{
                         width: '100%',
-                        padding: '15px',
-                        border: '3px solid #F4F4F4',
-                        borderRadius: '12px',
-                        fontSize: '16px',
+                        padding: '12px',
+                        border: '1px solid #ddd',
+                        borderRadius: '8px',
                         marginBottom: '10px'
                     }}
                 />
                 <button
                     onClick={verifyOTP}
+                    disabled={isLoading || verificationCode.length !== 6}
                     style={{
                         width: '100%',
-                        padding: '15px',
+                        padding: '12px',
+                        backgroundColor: '#8A2BE2',
+                        color: 'white',
                         border: 'none',
                         borderRadius: '8px',
-                        background: '#8A2BE2',
-                        color: 'white',
-                        fontSize: '16px',
-                        cursor: 'pointer'
+                        cursor: verificationCode.length === 6 ? 'pointer' : 'not-allowed',
+                        opacity: verificationCode.length === 6 ? 1 : 0.7
                     }}
                 >
-                    Verify OTP
+                    {isLoading ? 'Verifying...' : 'Verify OTP'}
                 </button>
             </div>
         );
@@ -244,7 +351,7 @@ export default function Signup() {
                         type="tel"
                         placeholder="Phone number"
                         value={phoneNumber}
-                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        onChange={handlePhoneNumberChange}
                         style={{
                             border: 'none',
                             outline: 'none',
@@ -257,7 +364,7 @@ export default function Signup() {
                 </div>
 
                 <button 
-                    onClick={handleContinue}
+                    onClick={handlePhoneSignIn}
                     style={{
                         width: '100%',
                         maxWidth: '400px',
@@ -319,7 +426,6 @@ export default function Signup() {
                     )}
                 </button>
 
-                <div id="recaptcha-container"></div>
                 {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
                 {renderOTPInput()}
             </div>

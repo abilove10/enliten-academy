@@ -1,15 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Home, Settings, BookOpen, MessageSquare, Globe, HelpCircle, LogOut, Menu, X } from 'react-feather';
-import { auth } from '../firebase/config';
+import { Home, Settings, BookOpen, MessageSquare, Globe, HelpCircle, LogOut, Menu, X, Bell } from 'react-feather';
+import { auth } from '../../Enliten-Backend/firebase/config';
+import { config } from '../utils/config';
 import Logo from '../assets/logo/logo.png';
 import { useSidebar } from '../context/SidebarContext';
+import defaultAvatar from '../assets/images/default-avatar.png'; // Make sure to add this image
+
+const API_URL = config.API_URL;
 
 export default function Sidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
     const [isScrolled, setIsScrolled] = useState(false);
+    const [userProfile, setUserProfile] = useState(null);
+    const [notifications, setNotifications] = useState([]);
+    const [showNotifications, setShowNotifications] = useState(false);
     
     const isActive = (path) => {
         return location.pathname === path;
@@ -17,10 +24,39 @@ export default function Sidebar() {
 
     const handleLogout = async () => {
         try {
+            // Sign out from Firebase
             await auth.signOut();
-            navigate('/signup');
+            
+            // Get the token before removing it
+            const token = localStorage.getItem('token');
+            
+            // Call backend logout endpoint if token exists
+            if (token) {
+                try {
+                    await fetch(`${API_URL}/api/auth/logout`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        credentials: 'include'
+                    });
+                } catch (error) {
+                    console.warn('Error calling logout endpoint:', error);
+                    // Continue with local logout even if server logout fails
+                }
+            }
+
+            // Clear local storage
+            localStorage.removeItem('token');
+            
+            // Navigate to login page
+            navigate('/', { replace: true });
         } catch (error) {
-            console.error("Error signing out:", error);
+            console.error("Error during logout:", error);
+            // Still try to clear local state even if there's an error
+            localStorage.removeItem('token');
+            navigate('/', { replace: true });
         }
     };
 
@@ -43,6 +79,164 @@ export default function Sidebar() {
         return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
+    useEffect(() => {
+        // Get current user profile
+        const user = auth.currentUser;
+        if (user) {
+            setUserProfile({
+                name: user.displayName,
+                email: user.email,
+                photoURL: user.photoURL || defaultAvatar
+            });
+        }
+    }, []);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (showNotifications && !event.target.closest('.notifications-container')) {
+                setShowNotifications(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [showNotifications]);
+
+    useEffect(() => {
+        const fetchNotifications = async () => {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_URL}/api/notifications`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    setNotifications(data);
+                }
+            } catch (error) {
+                console.error('Error fetching notifications:', error);
+            }
+        };
+
+        fetchNotifications();
+        // You might want to add a polling interval here
+        const interval = setInterval(fetchNotifications, 30000); // every 30 seconds
+
+        return () => clearInterval(interval);
+    }, []);
+
+    const ProfileSection = () => (
+        <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            padding: '15px',
+            borderBottom: '1px solid #eee',
+            marginBottom: '20px'
+        }}>
+            <img
+                src={userProfile?.photoURL || defaultAvatar}
+                alt="Profile"
+                style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    marginRight: '12px',
+                    objectFit: 'cover'
+                }}
+            />
+            <div style={{ flex: 1 }}>
+                <h3 style={{ 
+                    margin: 0, 
+                    fontSize: '16px',
+                    fontWeight: '600'
+                }}>
+                    {userProfile?.name || 'Student'}
+                </h3>
+                <p style={{ 
+                    margin: 0,
+                    fontSize: '12px',
+                    color: '#666'
+                }}>
+                    {userProfile?.email || ''}
+                </p>
+            </div>
+            <div style={{ position: 'relative' }}>
+                <button
+                    onClick={(e) => {
+                        e.stopPropagation();
+                        setShowNotifications(!showNotifications);
+                    }}
+                    style={{
+                        background: 'none',
+                        border: 'none',
+                        padding: '8px',
+                        cursor: 'pointer',
+                        position: 'relative'
+                    }}
+                >
+                    <Bell size={20} color="#666" />
+                    {notifications.length > 0 && (
+                        <span style={{
+                            position: 'absolute',
+                            top: '0',
+                            right: '0',
+                            background: '#ff4444',
+                            color: 'white',
+                            borderRadius: '50%',
+                            width: '18px',
+                            height: '18px',
+                            fontSize: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                        }}>
+                            {notifications.length}
+                        </span>
+                    )}
+                </button>
+                
+                {/* Notifications Dropdown */}
+                {showNotifications && (
+                    <div style={{
+                        position: 'absolute',
+                        top: '100%',
+                        right: '0',
+                        width: '280px',
+                        backgroundColor: 'white',
+                        borderRadius: '8px',
+                        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+                        zIndex: 1000,
+                        maxHeight: '400px',
+                        overflowY: 'auto'
+                    }}>
+                        {notifications.length > 0 ? (
+                            notifications.map((notification, index) => (
+                                <div
+                                    key={index}
+                                    style={{
+                                        padding: '12px',
+                                        borderBottom: '1px solid #eee',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <p style={{ margin: 0, fontSize: '14px' }}>{notification.message}</p>
+                                    <small style={{ color: '#666' }}>{notification.time}</small>
+                                </div>
+                            ))
+                        ) : (
+                            <div style={{ padding: '20px', textAlign: 'center', color: '#666' }}>
+                                No notifications
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 
     const isMobile = () => { 
         return /Mobi|Android/i.test(navigator.userAgent); 
@@ -164,23 +358,18 @@ export default function Sidebar() {
                     position: 'sticky',
                     top: 0,
                     backgroundColor: 'white',
-                    paddingBottom: '20px',
-                    zIndex: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '20px'
+                    zIndex: 2
                 }}>
                     <div style={{
                         display: 'flex',
                         justifyContent: 'space-between',
-                        alignItems: 'center'
+                        alignItems: 'center',
+                        marginBottom: '20px'
                     }}>
                         <img 
                             src={Logo} 
                             alt="Enliten Academy" 
-                            style={{ 
-                                width: '150px'
-                            }} 
+                            style={{ width: '150px' }} 
                         />
                         <button
                             onClick={() => setIsSidebarOpen(false)}
@@ -198,13 +387,8 @@ export default function Sidebar() {
                             <X size={20} />
                         </button>
                     </div>
-                    <p style={{ 
-                        color: '#666', 
-                        fontSize: '12px',
-                        textTransform: 'uppercase',
-                        letterSpacing: '1px',
-                        marginBottom: 0
-                    }}>overview</p>
+                    
+                    <ProfileSection />
                 </div>
                 
                 <div style={{ flex: 1 }}>

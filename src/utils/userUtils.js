@@ -1,5 +1,5 @@
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db } from '../../Enliten-Backend/firebase/config';
 
 export const createUserDocument = async (user) => {
     try {
