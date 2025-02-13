@@ -19,6 +19,10 @@ export default defineConfig(({ command, mode }) => {
         }
       } : undefined
     },
+    build: {
+      outDir: 'dist',
+      sourcemap: true
+    },
     define: {
       __API_URL__: JSON.stringify(isDevelopment 
         ? 'http://localhost:5000' 

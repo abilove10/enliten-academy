@@ -113,5 +113,22 @@ export const api = {
         return response.json();
     },
 
+    async fetchData(endpoint, options = {}) {
+        const response = await fetch(`${config.API_URL}${endpoint}`, {
+            ...options,
+            headers: {
+                ...getHeaders(options.token),
+                ...options.headers
+            },
+            credentials: 'include'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API Error: ${response.status}`);
+        }
+        
+        return response.json();
+    },
+
     // Add other API methods here
 }; 
