@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import './index.css'
 import App from './App.jsx'
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import '../Enliten-Backend/firebase/config.js'
+// import '../Enliten-Backend/firebase/config.js'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 import { SidebarProvider } from './context/SidebarContext';
 
