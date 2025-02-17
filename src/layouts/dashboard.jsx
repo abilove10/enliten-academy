@@ -16,6 +16,9 @@ import {
 import { api } from '../utils/api';
 import { config } from '../utils/config';
 
+//images
+import Rank from '../assets/images/rank.png';
+
 // Register ChartJS components
 ChartJS.register(
     CategoryScale,
@@ -66,6 +69,7 @@ export default function Dashboard() {
                 navigate('/', { replace: true });
                 return false;
             }
+            setAssessments(await api.fetchUserAssessments());
 
             setUserData(response);
             return true;
@@ -137,6 +141,7 @@ export default function Dashboard() {
         const authenticateAndFetchData = async () => {
             if (await checkAuth()) {
                 fetchUserData();
+                setAssessments(await api.fetchUserAssessments());
             }
         };
         authenticateAndFetchData();
@@ -320,7 +325,7 @@ export default function Dashboard() {
             }}>
                 <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>
                 <button 
-                    onClick={() => fetchUserData()}
+                    onClick={async() =>{ fetchUserData();setAssessments(await api.fetchUserAssessments())}}
                     style={{
                         padding: '10px 20px',
                         borderRadius: '8px',
@@ -348,7 +353,7 @@ export default function Dashboard() {
             }}>
                 <p style={{ color: 'red', marginBottom: '20px' }}>No user data available</p>
                 <button 
-                    onClick={() => fetchUserData()}
+                    onClick={async() =>{ fetchUserData();setAssessments(await api.fetchUserAssessments())}}
                     style={{
                         padding: '10px 20px',
                         borderRadius: '8px',
@@ -467,7 +472,10 @@ export default function Dashboard() {
                             <Award size={24} color="#8A2BE2" />
                             <div>
                                 <p style={{ color: '#666' }}>Ranking</p>
-                                <h2 style={{ margin: '5px 0' }}>{userData.rank || 'N/A'}</h2>
+                                <div style={{ display: 'flex', alignItems: 'center',justifyContent: 'space-between',width: '100%',gap:"100%" }}>
+                                    <h2 style={{ margin: '5px 0' }}>{userData.rank || 'N/A'}</h2>
+                                    <img src={Rank} alt="Rank" style={{ width: '70%' }} />
+                                </div>
                             </div>
                         </div>
 

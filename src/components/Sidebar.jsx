@@ -15,6 +15,7 @@ export default function Sidebar() {
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
     const [isScrolled, setIsScrolled] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
+    const [profilePhoto, setProfilePhoto] = useState(defaultAvatar);
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -66,8 +67,9 @@ export default function Sidebar() {
             setUserProfile({
                 name: userData.name || 'Student',
                 email: userData.email || '',
-                photoURL: userData.photo_url || defaultAvatar
+                photoURL: userData.photo_url
             });
+            setProfilePhoto(userData.photo_url);
         } catch (error) {
             console.error('Error fetching user profile:', error);
             setUserProfile({
@@ -119,7 +121,6 @@ export default function Sidebar() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showNotifications]);
-
     const ProfileSection = () => (
         <div style={{
             display: 'flex',
@@ -129,7 +130,8 @@ export default function Sidebar() {
             marginBottom: '20px'
         }}>
             <img
-                src={userProfile?.photoURL || defaultAvatar}
+            referrerpolicy="no-referrer"
+                src={profilePhoto}
                 alt="Profile"
                 style={{
                     width: '40px',
@@ -138,13 +140,13 @@ export default function Sidebar() {
                     marginRight: '12px',
                     objectFit: 'cover'
                 }}
-                onError={(e) => {
-                    // Prevent infinite loop by checking if already using default avatar
-                    if (e.target.src !== defaultAvatar) {
-                        console.log('Image load error, falling back to default avatar');
-                        e.target.src = defaultAvatar;
-                    }
-                }}
+                // onError={(e) => {
+                //     // Prevent infinite loop by checking if already using default avatar
+                //     if (e.target.src !== defaultAvatar) {
+                //         console.log('Image load error, falling back to default avatar');
+                //         e.target.src = defaultAvatar;
+                //     }
+                // }}
             />
             <div style={{ flex: 1 }}>
                 <h3 style={{ 

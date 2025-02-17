@@ -93,6 +93,7 @@ export const api = {
             );
             
             if (!popup) {
+                alert("Popup was blocked by the browser. Please enable popups and try again.");
                 throw new Error('Popup was blocked by the browser. Please enable popups and try again.');
             }
 
@@ -189,6 +190,31 @@ export const api = {
         }
     },
 
+    //get user assessments
+    async fetchUserAssessments() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+    
+            const response = await this.fetchWithRetry(`${API_URL}/api/assessment/user`, {
+                method: 'GET',
+                headers: getHeaders(token),
+                credentials: 'include'
+            });
+    
+            if (!response || !response.assessments) {
+                return []; // Return empty array if no assessments found
+            }
+    
+            return response.assessments;
+        } catch (error) {
+            console.error('Error fetching user assessments:', error);
+            throw error;
+        }
+    },
+    
     // Add retry logic for fetch requests
     async fetchWithRetry(url, options, retries = 3, delay = 1000) {
         try {
