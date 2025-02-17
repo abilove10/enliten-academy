@@ -22,7 +22,7 @@ export default defineConfig(({ command, mode }) => {
     define: {
       __API_URL__: JSON.stringify(isDevelopment 
         ? 'http://localhost:5000' 
-        : 'https://api.enliten.org.in'
+        : 'https://enliten-backend.onrender.com'
       )
     }
   }
