@@ -17,8 +17,9 @@ import { api } from '../utils/api';
 import { config } from '../utils/config';
 
 //images
-import Rank from '../assets/images/rank.png';
-
+import trophy from '../assets/images/trophy.png';
+import score from '../assets/images/score.png';
+import accuracy from '../assets/images/accuracy.png';
 // Register ChartJS components
 ChartJS.register(
     CategoryScale,
@@ -469,12 +470,14 @@ export default function Dashboard() {
                             alignItems: 'center',
                             gap: '15px'
                         }}>
-                            <Award size={24} color="#8A2BE2" />
                             <div>
-                                <p style={{ color: '#666' }}>Ranking</p>
-                                <div style={{ display: 'flex', alignItems: 'center',justifyContent: 'space-between',width: '100%',gap:"100%" }}>
+                                <div style={{ display: 'flex', alignItems: 'center',gap:"10px" }}>
+                                    <Award size={24} color="#8A2BE2" />
+                                    <p style={{ color: '#666' }}>Ranking</p>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center',justifyContent: 'space-between',width: '95%',paddingLeft:"5%" }}>
                                     <h2 style={{ margin: '5px 0' }}>{userData.rank || 'N/A'}</h2>
-                                    <img src={Rank} alt="Rank" style={{ width: '70%' }} />
+                                    <img src={trophy} alt="Rank" width={'30%'} />
                                 </div>
                             </div>
                         </div>
@@ -487,10 +490,16 @@ export default function Dashboard() {
                             alignItems: 'center',
                             gap: '15px'
                         }}>
-                            <Target size={24} color="#8A2BE2" />
                             <div>
-                                <p style={{ color: '#666' }}>Score</p>
-                                <h2 style={{ margin: '5px 0' }}>{userData.total_score}/100</h2>
+                                <div style={{ display: 'flex', alignItems: 'center',gap:"10px" }}>
+                                        <Target size={24} color="#8A2BE2" />
+                                        <p style={{ color: '#666' }}>Score</p>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center',justifyContent: 'space-between',width: '95%',paddingLeft:"5%" }}>
+                                    <h2 style={{ margin: '5px 0' }}>{userData.total_score}/100</h2>
+                                    <img src={score} alt="Rank" width={'20%'} />
+                                </div>
+                                
                             </div>
                         </div>
 
@@ -502,10 +511,15 @@ export default function Dashboard() {
                             alignItems: 'center',
                             gap: '15px'
                         }}>
-                            <Target size={24} color="#8A2BE2" />
                             <div>
-                                <p style={{ color: '#666' }}>Accuracy</p>
-                                <h2 style={{ margin: '5px 0' }}>{userData.accuracy}%</h2>
+                            <div style={{ display: 'flex', alignItems: 'center',gap:"10px" }}>
+                                        <Target size={24} color="#8A2BE2" />
+                                        <p style={{ color: '#666' }}>Accuracy</p>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center',justifyContent: 'space-between',width: '95%',paddingLeft:"5%" }}>
+                                    <h2 style={{ margin: '5px 0' }}>{userData.accuracy}%</h2>
+                                    <img src={accuracy} alt="Rank" width={'20%'} />
+                                </div>
                             </div>
                         </div>
                     </div>
