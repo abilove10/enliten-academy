@@ -260,7 +260,7 @@ export default function Sidebar() {
                         zIndex: 998,
                         transition: 'opacity 0.3s ease',
                         opacity: isSidebarOpen ? mobile ? 1 : 0 : 0,
-                        pointerEvents: isSidebarOpen ? 'auto' : 'none'
+                        pointerEvents: isSidebarOpen ? mobile?'auto':"none" : 'none',
                     }}
                 />
             )}
@@ -274,6 +274,7 @@ export default function Sidebar() {
                     left: '20px',
                     zIndex: 100,
                     padding: '8px 12px',
+                    paddingRight:"30px",
                     borderRadius: '8px',
                     border: 'none',
                     backgroundColor: isScrolled ? '#fff' : (isSidebarOpen ? 'transparent' : '#8A2BE2'),
@@ -319,7 +320,7 @@ export default function Sidebar() {
                         transform: isSidebarOpen ? 'rotate(-45deg)' : 'none'
                     }} />
                 </div>
-                {!isSidebarOpen && (
+                {/* {!isSidebarOpen && (
                     <span style={{ 
                         backgroundColor: '#8A2BE2', 
                         color: 'white',
@@ -330,7 +331,7 @@ export default function Sidebar() {
                     }}>
                         Get Yearly subscription @ ₹1 per day
                     </span>
-                )}
+                )} */}
             </button>
 
             {/* Sidebar */}

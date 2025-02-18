@@ -4,7 +4,8 @@ import Dashboard from './layouts/dashboard'
 import GoogleCallback from './pages/GoogleCallback'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
-//import './App.css'
+import Ai from './layouts/Ai'
+//import './App.css'  
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/ai-consultant" element={<Ai />} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

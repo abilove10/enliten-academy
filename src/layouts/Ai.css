@@ -1,0 +1,128 @@
+.load_bar{
+    width: 100%;
+    border-radius: 0.20rem;
+    margin-left: 10%;
+    height: 13px;
+    margin-top: 10px;
+    background: linear-gradient(to right,rgba(188, 34, 249,0.2),rgba(170, 34, 153, 0.267),rgba(188, 34, 249,0.2));
+    animation: load 2s linear infinite;
+  }
+  .layout2{
+    width: 100%;
+  }
+  .load{
+    width: 80%;
+    display: block;
+  }
+  @keyframes load{
+    0%{
+      background-position: -800px 0;
+    }
+    100%{
+      background-position: 800px 0;
+    }
+  }
+  .layout3{
+    margin-top: 10vh;
+    align-items: center;
+    justify-content: center;
+    border-radius: 15px;
+    height: 90vh;
+    width: 90%;
+    background-color: white;
+    padding-bottom:200px;
+    padding-top: 10vh;
+  }
+  .chatHistory {
+    width: 85%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 72vh;
+    overflow-y: auto;
+    scroll-behavior: smooth;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    margin-top: 0px;
+
+  }
+  *{
+    transition-duration: 1s;
+  }
+
+  /* Hide scrollbar for Chrome, Safari and Opera */
+.chatHistory::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.chatHistory {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+  .chatBubble {
+    display: flex;
+    align-items: flex-start;
+    padding: 10px;
+    border-radius: 20px;
+    max-width: 90%;
+    animation: fadeIn 0.3s ease-in-out;
+    margin-top: 20px;
+  }
+  .chatBubble.user {
+    border-bottom-right-radius: 0px;
+    background-color: #efefef;
+    align-self: flex-end;
+    margin-right: 20px;
+  }
+  .chatBubble.ai {
+    border-top-left-radius: 0px;
+    background-color: #fbf1ee;
+    align-self: flex-start;
+  }
+  .chatAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+    margin-left: 10px;
+  }
+  @keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+  }
+  @keyframes pulse {
+    0% {
+      box-shadow: 0 0 0 0 rgba(181, 126, 220,0.4);
+    }
+    70% {
+      box-shadow: 0 0 0 15px rgba(181, 126, 220,0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(181, 126, 220,0);
+    }
+  }
+  .mic-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50px;
+    width: 50px;
+    height: 50px;
+    cursor: pointer;
+    margin-left:10px;
+    margin-right:10px;
+
+
+  }
+  .mic-container.listening {
+    animation: pulse 1.5s infinite;
+    background-color: rgba(181, 126, 220,0.1);
+  }

@@ -12,6 +12,7 @@
   "dependencies": {
     "@firebase/app": "^0.11.1",
     "@firebase/auth": "^1.9.0",
+    "axios": "^1.7.9",
     "chart.js": "^4.4.7",
     "crypto-js": "^4.2.0",
     "firebase": "^11.3.1",
@@ -19,7 +20,9 @@
     "react": "^19.0.0",
     "react-chartjs-2": "^5.3.0",
     "react-dom": "^19.0.0",
-    "react-feather": "^2.0.10"
+    "react-feather": "^2.0.10",
+    "react-speech-recognition": "^3.10.0",
+    "regenerator-runtime": "^0.14.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.19.0",

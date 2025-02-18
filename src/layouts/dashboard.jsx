@@ -70,9 +70,12 @@ export default function Dashboard() {
                 navigate('/', { replace: true });
                 return false;
             }
-            setAssessments(await api.fetchUserAssessments());
-
+            
             setUserData(response);
+            if(response.assessment_count>0){
+
+                setAssessments(await api.fetchUserAssessments());
+            }
             return true;
         } catch (error) {
             console.error('Auth check failed:', error);
@@ -87,12 +90,25 @@ export default function Dashboard() {
         checkAuth();
     }, [checkAuth]);
 
+    useEffect(()=>{
+        async function get_assesment() {
+            
+            if(userData){
+                if(userData.assessment_count>0){
+    
+                    setAssessments(await api.fetchUserAssessments());
+                }
+            }
+        }
+        get_assesment();
+    },[userData])
+
     // Modify the fetchUserData function
     const fetchUserData = useCallback(async () => {
         try {
             if (!(await checkAuth())) return;
 
-            setLoading(true);
+            // setLoading(true);
             console.log('Fetching user data...');
             
             const token = localStorage.getItem('token');
@@ -132,7 +148,8 @@ export default function Dashboard() {
                 localStorage.removeItem('token');
                 navigate('/', { replace: true });
             }
-        } finally {
+        } 
+        finally {
             setLoading(false);
         }
     }, [navigate, checkAuth]);
@@ -142,7 +159,7 @@ export default function Dashboard() {
         const authenticateAndFetchData = async () => {
             if (await checkAuth()) {
                 fetchUserData();
-                setAssessments(await api.fetchUserAssessments());
+                // setAssessments(await api.fetchUserAssessments());
             }
         };
         authenticateAndFetchData();
@@ -303,6 +320,8 @@ export default function Dashboard() {
 
     if (loading) {
         return (
+            <>
+            <Sidebar />
             <div style={{ 
                 display: 'flex', 
                 justifyContent: 'center', 
@@ -311,6 +330,7 @@ export default function Dashboard() {
             }}>
                 Loading...
             </div>
+                </>
         );
     }
 
@@ -326,7 +346,9 @@ export default function Dashboard() {
             }}>
                 <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>
                 <button 
-                    onClick={async() =>{ fetchUserData();setAssessments(await api.fetchUserAssessments())}}
+                    onClick={async() =>{ fetchUserData();
+                        // setAssessments(await api.fetchUserAssessments())
+                        }}
                     style={{
                         padding: '10px 20px',
                         borderRadius: '8px',
@@ -354,7 +376,9 @@ export default function Dashboard() {
             }}>
                 <p style={{ color: 'red', marginBottom: '20px' }}>No user data available</p>
                 <button 
-                    onClick={async() =>{ fetchUserData();setAssessments(await api.fetchUserAssessments())}}
+                    onClick={async() =>{ fetchUserData();
+                        // setAssessments(await api.fetchUserAssessments())
+                    }}
                     style={{
                         padding: '10px 20px',
                         borderRadius: '8px',
@@ -477,7 +501,7 @@ export default function Dashboard() {
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'center',justifyContent: 'space-between',width: '95%',paddingLeft:"5%" }}>
                                     <h2 style={{ margin: '5px 0' }}>{userData.rank || 'N/A'}</h2>
-                                    <img src={trophy} alt="Rank" width={'30%'} />
+                                    <img src={trophy} alt="Rank" width={'25%'} />
                                 </div>
                             </div>
                         </div>
