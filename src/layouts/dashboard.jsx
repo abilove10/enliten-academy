@@ -112,27 +112,28 @@ export default function Dashboard() {
             console.log('Fetching user data...');
             
             const token = localStorage.getItem('token');
-            const response = await fetch(`${API_URL}/api/user/data`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include'
-            });
+            const response = await api.fetchUserData();
+            // fetch(`${API_URL}/api/user/data`, {
+            //     headers: {
+            //         'Authorization': `Bearer ${token}`,
+            //         'Content-Type': 'application/json'
+            //     },
+            //     credentials: 'include'
+            // });
 
-            console.log('User data response status:', response.status);
+            console.log('User data response status:', response);
 
-            if (!response.ok) {
-                if (response.status === 401) {
+            if (!response) {
+                // if (response.status === 401) {
                     console.log('Unauthorized response, clearing token');
                     localStorage.removeItem('token');
                     navigate('/', { replace: true });
                     return;
-                }
-                throw new Error('Failed to fetch user data');
+                // }
+                // throw new Error('Failed to fetch user data');
             }
 
-            const data = await response.json();
+            const data = await response;
             console.log('Received user data:', data);
             
             if (!data) {

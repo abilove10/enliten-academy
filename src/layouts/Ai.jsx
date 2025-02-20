@@ -124,7 +124,7 @@ function Ai(props) {
         //   console.error(error);
         // });
 
-        axios.post("https://api.enliten.org.in/chat",
+        axios.post("http://127.0.0.1:5000/chat",
             { message: q },
             {
             method: 'POST',

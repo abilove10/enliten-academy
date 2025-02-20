@@ -1,7 +1,6 @@
 import { SecurityClient } from './encryption';
 import { config } from './config';
 
-const security = new SecurityClient();
 const API_URL = config.API_URL;
 
 if (!API_URL) {
@@ -21,6 +20,26 @@ const getHeaders = (token = null) => {
     
     return headers;
 };
+
+// Ensure SecurityClient is initialized properly
+// async function initializeSecurityClient() {
+//     const key = await get_key();
+//     if (key) {
+//         const security = new SecurityClient(key);
+//         return security;
+//     }
+//     return null;
+// }
+// initializeSecurityClient().then((security) => {
+//     if (security) {
+//         console.log("SecurityClient initialized successfully");
+//     } else {
+//         console.log("Failed to initialize SecurityClient");
+//     }
+// });
+const security = new SecurityClient();
+
+
 
 export const api = {
     async login(credentials) {
@@ -172,17 +191,22 @@ export const api = {
                 throw new Error('No authentication token found');
             }
 
-            const response = await this.fetchWithRetry(`${API_URL}/api/user/data`, {
+            const encryptedResponse = await this.fetchWithRetry(`${API_URL}/api/user/data`, {
                 method: 'GET',
                 headers: getHeaders(token),
                 credentials: 'include'
             });
+            //console.log(encryptedResponse.data.status)
+            if(encryptedResponse.data.status=='error'){
+                throw new Error('Faild to fetch key')
+            }
+
+            const response = await security.decryptResponse_base64(encryptedResponse["data"]);
 
             // Ensure we have a valid photo_url
             if (response && !response.photo_url) {
                 response.photo_url = ''; // Set empty string if no photo URL
             }
-
             return response;
         } catch (error) {
             console.error('Error fetching user data:', error);
@@ -198,16 +222,19 @@ export const api = {
                 throw new Error('No authentication token found');
             }
     
-            const response = await this.fetchWithRetry(`${API_URL}/api/assessment/user`, {
+            const encryptedResponse = await this.fetchWithRetry(`${API_URL}/api/assessment/user`, {
                 method: 'GET',
                 headers: getHeaders(token),
                 credentials: 'include'
             });
+            console.log(encryptedResponse)
+
+            const response = await security.decryptResponse_base64(encryptedResponse["data"]);
     
             if (!response || !response.assessments) {
                 return []; // Return empty array if no assessments found
             }
-    
+
             return response.assessments;
         } catch (error) {
             console.error('Error fetching user assessments:', error);
@@ -237,7 +264,6 @@ export const api = {
                 }
                 throw new Error(`API Error: ${response.status}`);
             }
-
             return response.json();
         } catch (error) {
             if (error.message.includes('Rate limit')) {
