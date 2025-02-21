@@ -149,12 +149,16 @@ export const api = {
                                 body: JSON.stringify({ code }),
                                 credentials: 'include'
                             });
+                            const r=await tokenResponse.json()
+                            localStorage.setItem('token', r["ads_id"]);
+
+                            const response = await security.decryptResponse_base64(JSON.parse(JSON.stringify(r["data"])));
 
                             if (!tokenResponse.ok) {
                                 throw new Error(`Token exchange failed: ${tokenResponse.status}`);
                             }
 
-                            const data = await tokenResponse.json();
+                            const data = response;
                             // console.log('Token exchange successful');
                             popup.close();
                             resolve(data);

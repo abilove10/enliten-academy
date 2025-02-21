@@ -100,9 +100,13 @@ export class SecurityClient {
     }
     async  decryptResponse_base64(response) {
         try {
+            // console.log('data: '+atob(response.data))
             const encrypted_base64 = response.data;
             if(this.aes_key==''){
                 this.aes_key=await this.get_key()
+                if(this.aes_key==''){
+                    window.location.href='/';
+                }
             }
             const aes_key = this.aes_key; // Assuming this returns base64 encoded key
             // const aes_key = await this.get_key(); // Assuming this returns base64 encoded key
@@ -150,7 +154,9 @@ export class SecurityClient {
             return JSON.parse(decryptedText);
         } catch (error) {
             console.error('Decryption failed:', error);
-            throw new Error('Decryption failed');
+            // throw new Error('Decryption failed');
+            throw new Error('Retry');
+            
         }
     
     }
