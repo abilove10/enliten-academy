@@ -129,21 +129,21 @@ export default function Signup() {
         try {
             setIsLoading(true);
             setError('');
-            console.log('Starting Google Sign In process...');
+            // console.log('Starting Google Sign In process...');
             
             const response = await api.googleSignIn();
-            console.log('Google Sign In response:', response);
+            // console.log('Google Sign In response:', response);
             
             if (response.token) {
-                console.log('Token received, saving to localStorage');
+                // console.log('Token received, saving to localStorage');
                 localStorage.setItem('token', response.token);
-                console.log('Navigating to dashboard...');
+                // console.log('Navigating to dashboard...');
                 navigate('/dashboard', { replace: true });
             } else {
                 throw new Error('No token received from Google Sign In');
             }
         } catch (error) {
-            console.error('Google Sign In error:', error);
+            // console.error('Google Sign In error:', error);
             setError(error.message || 'Failed to sign in with Google');
         } finally {
             setIsLoading(false);

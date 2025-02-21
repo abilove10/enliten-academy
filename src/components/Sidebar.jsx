@@ -13,7 +13,7 @@ export default function Sidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
-    const [isScrolled, setIsScrolled] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(true);
     const [userProfile, setUserProfile] = useState(null);
     const [profilePhoto, setProfilePhoto] = useState(defaultAvatar);
     const [notifications, setNotifications] = useState([]);
@@ -62,7 +62,7 @@ export default function Sidebar() {
             if (!isLoading) return;
 
             const userData = await api.fetchUserData();
-            console.log('Fetched user data:', userData);
+            // console.log('Fetched user data:', userData);
 
             setUserProfile({
                 name: userData.name || 'Student',
@@ -89,16 +89,17 @@ export default function Sidebar() {
 
     // Memoize notifications fetch
     const fetchNotifications = useCallback(async () => {
-        try {
-            const response = await api.fetchData('/api/notifications');
-            setNotifications(response);
-        } catch (error) {
-            if (error.status === 429) {
-                console.log('Rate limited, will retry later');
-                return;
-            }
-            console.error('Error fetching notifications:', error);
-        }
+        // try {
+        //     const response = await api.fetchData('/api/notifications');
+        //     setNotifications(response);
+        // } catch (error) {
+        //     if (error.status === 429) {
+        //         console.log('Rate limited, will retry later');
+        //         return;
+        //     }
+        //     console.error('Error fetching notifications:', error);
+        // }
+        return '';
     }, []);
 
     // Notifications polling with rate limit consideration

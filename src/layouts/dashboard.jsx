@@ -53,11 +53,11 @@ export default function Dashboard() {
     // Create a memoized auth check function
     const checkAuth = useCallback(async () => {
         try {
-            console.log('Checking authentication...');
+            // console.log('Checking authentication...');
             const token = localStorage.getItem('token');
             
             if (!token) {
-                console.log('No token found, redirecting to login');
+                // console.log('No token found, redirecting to login');
                 navigate('/', { replace: true });
                 return false;
             }
@@ -65,7 +65,7 @@ export default function Dashboard() {
             // Verify token with backend
             const response = await api.fetchUserData();
             if (!response) {
-                console.log('Invalid session, redirecting to login');
+                // console.log('Invalid session, redirecting to login');
                 localStorage.removeItem('token');
                 navigate('/', { replace: true });
                 return false;
@@ -109,7 +109,7 @@ export default function Dashboard() {
             if (!(await checkAuth())) return;
 
             // setLoading(true);
-            console.log('Fetching user data...');
+            // console.log('Fetching user data...');
             
             const token = localStorage.getItem('token');
             const response = await api.fetchUserData();
@@ -121,7 +121,7 @@ export default function Dashboard() {
             //     credentials: 'include'
             // });
 
-            console.log('User data response status:', response);
+            // console.log('User data response status:', response);
 
             if (!response) {
                 // if (response.status === 401) {
@@ -134,7 +134,7 @@ export default function Dashboard() {
             }
 
             const data = await response;
-            console.log('Received user data:', data);
+            // console.log('Received user data:', data);
             
             if (!data) {
                 throw new Error('No data received');

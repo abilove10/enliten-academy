@@ -94,7 +94,7 @@ export const api = {
 
     async googleSignIn() {
         try {
-            console.log('Fetching Google Sign In URL...');
+            // console.log('Fetching Google Sign In URL...');
             const response = await fetch(`${API_URL}/api/auth/google-signin-url`);
             
             if (!response.ok) {
@@ -102,7 +102,7 @@ export const api = {
             }
             
             const { url } = await response.json();
-            console.log('Received Google Sign In URL:', url);
+            // console.log('Received Google Sign In URL:', url);
             
             // Open popup with specific features
             const popup = window.open(
@@ -126,7 +126,7 @@ export const api = {
 
                 // Message event handler
                 const messageHandler = async (event) => {
-                    console.log('Received message event:', event.data);
+                    // console.log('Received message event:', event.data);
                     
                     // Validate origin
                     if (event.origin !== window.location.origin) {
@@ -135,13 +135,13 @@ export const api = {
                     }
 
                     if (event.data.type === 'GOOGLE_SIGN_IN_SUCCESS') {
-                        console.log('Received success message with code');
+                        // console.log('Received success message with code');
                         clearTimeout(timeout);
                         window.removeEventListener('message', messageHandler);
 
                         try {
                             const { code } = event.data;
-                            console.log('Exchanging code for token...');
+                            // console.log('Exchanging code for token...');
                             
                             const tokenResponse = await fetch(`${API_URL}/api/auth/google-signin-callback`, {
                                 method: 'POST',
@@ -155,7 +155,7 @@ export const api = {
                             }
 
                             const data = await tokenResponse.json();
-                            console.log('Token exchange successful');
+                            // console.log('Token exchange successful');
                             popup.close();
                             resolve(data);
                         } catch (error) {
@@ -227,7 +227,7 @@ export const api = {
                 headers: getHeaders(token),
                 credentials: 'include'
             });
-            console.log(encryptedResponse)
+            // console.log(encryptedResponse)
 
             const response = await security.decryptResponse_base64(encryptedResponse["data"]);
     

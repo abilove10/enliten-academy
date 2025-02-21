@@ -308,7 +308,7 @@ function Ai(props) {
                                                     <div key={index} className={`chatBubble ${chat.type}`}>
                                                         {chat.type !== 'user' && <img src={ai} alt="" className="chatAvatar" />}
                                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'flex-start', marginTop: '20px' }}>
-                                                            {console.log(chat.text)}
+                                                            {/* {console.log(chat.text)} */}
                                                             {JSON.parse(chat.text).map((book) => (
                                                                 <div key={book["Book Name"]} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '130px' }}>
                                                                     <img

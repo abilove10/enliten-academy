@@ -41,7 +41,7 @@ export class SecurityClient {
     async  get_key() {
     const token = localStorage.getItem('token');
     //alert("Token: "+token);
-            const response = await fetch(`${API_URL}/api/user/key`, {
+            const response = await fetch(`${API_URL}/api/user/ads`, {
                 headers:  {
                     'Content-Type': 'application/json',
                     'Accept': 'application/json',
@@ -63,7 +63,8 @@ export class SecurityClient {
             // }
 
             const data = await response.json();
-            return atob(data.aes_key)
+            // return atob(data.aes_key)
+            return atob(data.ads_key)
 }
 
     async encryptRequest(data) {
@@ -92,15 +93,20 @@ export class SecurityClient {
         const encrypted_data=response.data;
         this.aes_key=await this.get_key()
         //alert("Key:"+this.aes_key)
-        console.log(this.aes_key)
+        // console.log(this.aes_key)
         const decryptedData = decrypt(encrypted_data, this.aes_key).toString();
-        console.log(decryptedData)
+        // console.log(decryptedData)
         return JSON.parse(decryptedData);
     }
     async  decryptResponse_base64(response) {
         try {
             const encrypted_base64 = response.data;
-            const aes_key = await this.get_key(); // Assuming this returns base64 encoded key
+            if(this.aes_key==''){
+                this.aes_key=await this.get_key()
+            }
+            const aes_key = this.aes_key; // Assuming this returns base64 encoded key
+            // const aes_key = await this.get_key(); // Assuming this returns base64 encoded key
+            
             //console.log("EN : "+encrypted_base64)
             // Decode the base64 key
             const key = new Uint8Array(aes_key.split('').map(c => c.charCodeAt(0)));
