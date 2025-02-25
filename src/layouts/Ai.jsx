@@ -32,7 +32,7 @@ import a3 from "../assets/icons/ai/a3.png"
 import a4 from "../assets/icons/ai/a4.png"
 import a5 from "../assets/icons/ai/a5.png"
 import a6 from "../assets/icons/ai/a6.png"
-
+import quiz from "../assets/icons/ai/quiz.png"
 //Style
 import './Ai.css'
 
@@ -52,6 +52,7 @@ function Ai(props) {
     const [isListening, setIsListening] = useState(false);
     const [quizmode,setquizmode]=useState(false);
     const [loading, setLoading] = useState(true);
+    
 
     const isMobile = () => { 
         return /Mobi|Android/i.test(navigator.userAgent); 
@@ -327,7 +328,7 @@ function Ai(props) {
 
                 <div style={{ justifyContent: "center", display: "flex" ,position: "absolute", bottom: "9%",width:mobile? "80%": "50%"}}>
                     <div className='chatBox' style={{backgroundColor:"white",  display: "flex", width: "100%", alignItems: "center", boxShadow: "rgba(0,0,0, 0.1) 0px 0px 8px", borderRadius: "15px", height: "60px" }}>
-                        <div onClick={()=>setquizmode(!quizmode)} style={{border:quizmode?"2px solid #9500FF":"none",backgroundColor:quizmode?"#E8CBFB":"#F8ECFF",transition:"none",cursor:"pointer",borderRadius:"8px",padding:"11px",fontSize:"11px",height:"30px",position:"absolute",left:"0px",top:"-40px",color:"#9500FF",display:"flex",alignItems:"center",justifyContent:"center"}}><p>Quiz</p></div>
+                        <div onClick={()=>setquizmode(!quizmode)} style={{border:quizmode?"2px solid #9500FF":"none",backgroundColor:quizmode?"#E8CBFB":"#F8ECFF",transition:"none",cursor:"pointer",borderRadius:"8px",padding:"11px",fontSize:"11px",height:"30px",position:"absolute",left:"0px",top:"-40px",color:"#9500FF",display:"flex",alignItems:"center",justifyContent:"center"}}> <img src={quiz} width={14} style={{marginRight:"8px"}} alt="" /> <p style={{color:"rgb(181, 126, 220)"}}><b>Quiz</b></p></div>
                         <div className={`mic-container ${listening ? 'listening' : ''}`}>
                             <Mic
                                 color={listening ? '#B57EDC' : '#B57EDC'}
