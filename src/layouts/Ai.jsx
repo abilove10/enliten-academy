@@ -123,7 +123,8 @@ function Ai(props) {
         // Add user message to chat history
         setChatHistory(prev => [...prev, { type: 'user', text: q }]);
 
-        axios.post("http://localhost:5000/chat",
+        // axios.post("http://localhost:5000/chat",
+        axios.post("http://api.enliten.org.in/chat",
             { 
                 message: q,
                 isQuizMode: quizmode // Make sure this is being sent
