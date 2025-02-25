@@ -132,6 +132,7 @@ function Ai(props) {
         return true;
     }finally{
         setLoading(false);
+        setTimeout(auth_check, 300000); // 5 minutes Gap
     }
     }
 
