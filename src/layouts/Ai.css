@@ -39,11 +39,11 @@
     flex-direction: column;
     gap: 10px;
     max-height: 72vh;
-    overflow-y: auto;
+    overflow-y: scroll;
     scroll-behavior: smooth;
-    padding-top: 50px;
+    padding-top: 0px;
     padding-bottom: 50px;
-    margin-top: 0px;
+    margin-top: 20px;
 
   }
   *{
@@ -78,7 +78,7 @@
   }
   .chatBubble.ai {
     border-top-left-radius: 0px;
-    background-color: #fbf1ee;
+    background-color: #FCF6FF;
     align-self: flex-start;
   }
   .chatAvatar {

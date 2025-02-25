@@ -39,7 +39,14 @@ const getHeaders = (token = null) => {
 // });
 const security = new SecurityClient();
 
+// Add these constants at the top of the file with other constants
+const USER_DATA_CACHE_KEY = 'cached_user_data';
+const CACHE_EXPIRY_TIME = 15 * 60 * 1000; // 15 minutes in milliseconds
 
+// Clear cache on page reload
+window.addEventListener('load', () => {
+    localStorage.removeItem(USER_DATA_CACHE_KEY);
+});
 
 export const api = {
     async login(credentials) {
@@ -95,6 +102,9 @@ export const api = {
     async googleSignIn() {
         try {
             // console.log('Fetching Google Sign In URL...');
+            localStorage.removeItem(USER_DATA_CACHE_KEY);
+            localStorage.removeItem('cached_assessments');
+
             const response = await fetch(`${API_URL}/api/auth/google-signin-url`);
             
             if (!response.ok) {
@@ -195,14 +205,28 @@ export const api = {
                 throw new Error('No authentication token found');
             }
 
+            // Check cache first
+            const cachedData = localStorage.getItem(USER_DATA_CACHE_KEY);
+            if (cachedData) {
+                const { data, timestamp } = JSON.parse(cachedData);
+                const now = new Date().getTime();
+                
+                // If cache hasn't expired, return cached data
+                if (now - timestamp < CACHE_EXPIRY_TIME) {
+                    return await security.decryptResponse_base64(data);
+                }
+                // If expired, remove the cached data
+                localStorage.removeItem(USER_DATA_CACHE_KEY);
+            }
+
             const encryptedResponse = await this.fetchWithRetry(`${API_URL}/api/user/data`, {
                 method: 'GET',
                 headers: getHeaders(token),
                 credentials: 'include'
             });
-            //console.log(encryptedResponse.data.status)
-            if(encryptedResponse.data.status=='error'){
-                throw new Error('Faild to fetch key')
+
+            if(encryptedResponse.data.status === 'error'){
+                throw new Error('Failed to fetch key');
             }
 
             const response = await security.decryptResponse_base64(encryptedResponse["data"]);
@@ -211,11 +235,24 @@ export const api = {
             if (response && !response.photo_url) {
                 response.photo_url = ''; // Set empty string if no photo URL
             }
+
+            // Cache the response with timestamp
+            localStorage.setItem(USER_DATA_CACHE_KEY, JSON.stringify({
+                data: encryptedResponse["data"],
+                timestamp: new Date().getTime()
+            }));
+
             return response;
         } catch (error) {
             console.error('Error fetching user data:', error);
             throw error;
         }
+    },
+
+    // Optional method to force refresh
+    async forceRefreshUserData() {
+        localStorage.removeItem(USER_DATA_CACHE_KEY);
+        return this.fetchUserData();
     },
 
     //get user assessments
@@ -225,7 +262,21 @@ export const api = {
             if (!token) {
                 throw new Error('No authentication token found');
             }
-    
+            const cachedassessments = localStorage.getItem('cached_assessments');
+            if (cachedassessments) {
+                const { data, timestamp } = JSON.parse(cachedassessments);
+                const now = new Date().getTime();
+                
+                // If cache hasn't expired, return cached data
+                if (now - timestamp < CACHE_EXPIRY_TIME) {
+                    var temp =await security.decryptResponse_base64(data);
+                    console.log(temp)
+                    return temp.assessments
+                }
+                // If expired, remove the cached data
+                localStorage.removeItem('cached_assessments');
+            }
+
             const encryptedResponse = await this.fetchWithRetry(`${API_URL}/api/assessment/user`, {
                 method: 'GET',
                 headers: getHeaders(token),
@@ -234,6 +285,10 @@ export const api = {
             // console.log(encryptedResponse)
 
             const response = await security.decryptResponse_base64(encryptedResponse["data"]);
+            localStorage.setItem('cached_assessments', JSON.stringify({
+                data: encryptedResponse["data"],
+                timestamp: new Date().getTime()
+            }));
     
             if (!response || !response.assessments) {
                 return []; // Return empty array if no assessments found

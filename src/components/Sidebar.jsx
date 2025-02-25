@@ -28,7 +28,8 @@ export default function Sidebar() {
         try {
             await api.logout();
             localStorage.removeItem('token');
-            navigate('/', { replace: true });
+            window.location.href = '/';
+            // navigate('/', { replace: true });
         } catch (error) {
             console.error('Logout error:', error);
             localStorage.removeItem('token');
