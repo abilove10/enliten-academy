@@ -13,7 +13,7 @@ export default function Sidebar() {
     const location = useLocation();
     const navigate = useNavigate();
     const { isSidebarOpen, setIsSidebarOpen } = useSidebar();
-    const [isScrolled, setIsScrolled] = useState(true);
+    const [isScrolled, setIsScrolled] = useState(false);
     const [userProfile, setUserProfile] = useState(null);
     const [profilePhoto, setProfilePhoto] = useState(defaultAvatar);
     const [notifications, setNotifications] = useState([]);
@@ -51,6 +51,9 @@ export default function Sidebar() {
         const handleScroll = () => {
             setIsScrolled(window.scrollY > 20);
         };
+
+        // Call handleScroll once to set initial state
+        handleScroll();
 
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);

@@ -15,6 +15,8 @@ import {
 } from 'chart.js';
 import { api } from '../utils/api';
 import { config } from '../utils/config';
+import 'ldrs/hourglass'
+
 
 //images
 import trophy from '../assets/images/trophy.png';
@@ -72,8 +74,13 @@ export default function Dashboard() {
             }
             
             setUserData(response);
-            if(response.assessment_count>0){
-
+            // Set subject data here
+            setSubjectData({
+                labels: Object.keys(response.subject_analysis) || [],
+                values: Object.values(response.subject_analysis) || []
+            });
+            
+            if(response.assessment_count > 0){
                 setAssessments(await api.fetchUserAssessments());
             }
             return true;
@@ -84,6 +91,18 @@ export default function Dashboard() {
             return false;
         }
     }, [navigate]);
+
+    useEffect(()=>{
+        async function get_subject_data(){
+            const response = await api.fetchUserData();
+            setSubjectData({
+                labels: Object.keys(response.subject_analysis) || [],
+                values: Object.values(response.subject_analysis) || []
+            });
+            console.log(subjectData);
+        }
+        get_subject_data();
+    },[userData])
 
     // Use the checkAuth function in useEffect
     useEffect(() => {
@@ -140,7 +159,12 @@ export default function Dashboard() {
                 throw new Error('No data received');
             }
             
-            setUserData(data);
+            setUserData(response);
+            // Set subject data here
+            setSubjectData({
+                labels: Object.keys(response.subject_analysis) || [],
+                values: Object.values(response.subject_analysis) || []
+            });
         } catch (err) {
             console.error('Error in fetchUserData:', err);
             setError(err.message);
@@ -149,8 +173,7 @@ export default function Dashboard() {
                 localStorage.removeItem('token');
                 navigate('/', { replace: true });
             }
-        } 
-        finally {
+        } finally {
             setLoading(false);
         }
     }, [navigate, checkAuth]);
@@ -327,9 +350,17 @@ export default function Dashboard() {
                 display: 'flex', 
                 justifyContent: 'center', 
                 alignItems: 'center', 
-                height: '100vh' 
+                height: '100vh',
+                backgroundColor: 'white' ,
+                paddingLeft: '300px'
             }}>
-                Loading...
+                Initializing...
+<l-hourglass
+  size="40"
+  bg-opacity="0.1"
+  speed="1.75"
+  color="rgb(181,126,220)" 
+></l-hourglass>
             </div>
                 </>
         );

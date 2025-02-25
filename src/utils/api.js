@@ -270,7 +270,7 @@ export const api = {
                 // If cache hasn't expired, return cached data
                 if (now - timestamp < CACHE_EXPIRY_TIME) {
                     var temp =await security.decryptResponse_base64(data);
-                    console.log(temp)
+                    // console.log(temp)
                     return temp.assessments
                 }
                 // If expired, remove the cached data

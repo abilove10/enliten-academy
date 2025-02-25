@@ -2,6 +2,8 @@ import 'regenerator-runtime/runtime';
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
+import { api } from '../utils/api';
+import 'ldrs/hourglass'
 
 //Assets
 import user from '../assets/user.png';
@@ -49,6 +51,7 @@ function Ai(props) {
     const [chatHistory, setChatHistory] = useState([]);
     const [isListening, setIsListening] = useState(false);
     const [quizmode,setquizmode]=useState(false);
+    const [loading, setLoading] = useState(true);
 
     const isMobile = () => { 
         return /Mobi|Android/i.test(navigator.userAgent); 
@@ -111,6 +114,30 @@ function Ai(props) {
         return headers;
     };
     
+
+    async function auth_check(){
+        setLoading(true);
+    try{
+        const token = localStorage.getItem('token');
+        if(!token){
+            window.location.href = '/';
+            return false;
+        }
+        const response = await api.fetchUserData();
+        if(!response){
+            localStorage.removeItem('token');
+            window.location.href = '/';
+            return false;
+        }
+        return true;
+    }finally{
+        setLoading(false);
+    }
+    }
+
+    useEffect(()=>{
+        auth_check();
+    },[]);
 
     async function send_query() {
         const token = localStorage.getItem('token');
@@ -186,6 +213,29 @@ function Ai(props) {
         return () => window.removeEventListener('resize', updateContentWidth);
     }, [isSidebarOpen]);
 
+    if (loading) {
+        return (
+            <>
+            <Sidebar />
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center', 
+                alignItems: 'center', 
+                height: '100vh',
+                backgroundColor: 'white' ,
+                paddingLeft: '300px'
+            }}>
+                Initializing...
+<l-hourglass
+  size="40"
+  bg-opacity="0.1"
+  speed="1.75"
+  color="rgb(181,126,220)" 
+></l-hourglass>
+            </div>
+                </>
+        );
+    }else{
 
     return (
         < div style={{ display: 'flex' }}>
@@ -358,6 +408,7 @@ function Ai(props) {
             </div>
         </div>
     );
+}
 }
 
 export default Ai;
