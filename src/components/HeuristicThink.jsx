@@ -1,7 +1,12 @@
 import React from 'react';
 
 const HeuristicThink = ({response}) => {
-
+  const isMobile = () => { 
+    return /Mobi|Android/i.test(navigator.userAgent); 
+  }; 
+   
+  // Usage in a React component 
+    const mobile = isMobile(); 
     const formatText = (text) => {
         if (!text) return [];
         
@@ -173,11 +178,12 @@ const HeuristicThink = ({response}) => {
             borderLeft: "3px solid rgb(220,220,220)",
             paddingLeft: "20px",
             marginBottom: "10px",
-            maxWidth: "90%",
+            maxWidth: mobile ? "100%" : "90%",
             color: "rgb(128, 82, 149)",
             lineHeight: "30px",
             fontSize: "14px",
             letterSpacing: "0.01em",
+            zIndex:"1",
             fontFamily: 'Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif'
         }}>
             {formatText(response)}

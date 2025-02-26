@@ -584,7 +584,7 @@ const formatText = (text) => {
                     <div className="chatHistory">
                         {chatHistory.map((chat, index) => {
                             return (
-                                <div key={index} className={`chatBubble ${chat.type}`}>
+                                <div key={index} className={`chatBubble ${chat.type} ${isMobile() ? 'mobile' : ''}`} style={{maxWidth:isMobile()?"100%":"90%"} }>
                                     {chat.type !== 'user' && <img src={ai} style={{display:mobile?"none":"block"}} alt="" className="chatAvatar" />}
                                     
                                     {chat.type === "ai" ? (
@@ -597,7 +597,7 @@ const formatText = (text) => {
                                                     {chat.text}
                                                 </div>
                                             ) : (
-                                                <div style={{ marginLeft: "10px", marginRight: "10px", textAlign: 'left' ,fontSize:"16px",letterSpacing:"0.02em",lineHeight:"30px"}}>
+                                                <div style={{ marginLeft: isMobile?"0px":"10px", marginRight:isMobile?"0px": "10px", textAlign: 'left' ,fontSize:isMobile?"14px":"16px",letterSpacing:"0.02em",lineHeight:"30px",fontFamily:"Inter"}}>
                                                     
                                                     {chat.isHeuristic? 
                                                     <>
@@ -645,7 +645,7 @@ const formatText = (text) => {
                                         </>
                                     ) : (
                                         // User message
-                                        <p style={{ marginLeft: "10px", marginRight: "10px", textAlign: 'left' }}>
+                                        <p style={{ marginLeft:isMobile?"5px": "10px", marginRight: isMobile()?"5px":"10px", textAlign: 'left' }}>
                                             {chat.text}
                                         </p>
                                     )}

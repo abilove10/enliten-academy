@@ -70,6 +70,7 @@
     max-width: 90%;
     animation: fadeIn 0.3s ease-in-out;
     margin-top: 20px;
+    
   }
   .chatBubble.user {
     border-bottom-right-radius: 0px;
@@ -155,4 +156,7 @@
 
 .chevron-icon.up {
   transform: rotate(180deg);
+}
+.chatBubble.mobile{
+  background-color: transparent;
 }
