@@ -41,7 +41,8 @@ const security = new SecurityClient();
 
 // Add these constants at the top of the file with other constants
 const USER_DATA_CACHE_KEY = 'cached_user_data';
-const CACHE_EXPIRY_TIME = 15 * 60 * 1000; // 15 minutes in milliseconds
+// const CACHE_EXPIRY_TIME = 15 * 60 * 1000;
+const CACHE_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
 // Clear cache on page reload
 window.addEventListener('load', () => {

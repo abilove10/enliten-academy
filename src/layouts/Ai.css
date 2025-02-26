@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
 .load_bar{
     width: 100%;
     border-radius: 0.20rem;
@@ -126,3 +127,32 @@
     animation: pulse 1.5s infinite;
     background-color: rgba(181, 126, 220,0.1);
   }
+
+.heuristic-container {
+  overflow: hidden;
+  margin-bottom: 20px;
+  will-change: max-height, opacity, margin;
+}
+
+.heuristic-button {
+  display: flex;
+  max-width: fit-content;
+  gap: 5px;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+  align-items: center;
+}
+
+.heuristic-button:hover {
+  background-color: rgba(181, 126, 220, 0.1);
+}
+
+.chevron-icon {
+  transition: transform 0.3s ease;
+}
+
+.chevron-icon.up {
+  transform: rotate(180deg);
+}
