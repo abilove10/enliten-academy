@@ -293,7 +293,7 @@ const formatText = (text) => {
     
 
     async function auth_check(){
-        setLoading(true);
+        // setLoading(true);
     try{
         const token = localStorage.getItem('token');
         if(!token){
