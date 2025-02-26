@@ -541,9 +541,53 @@ const formatText = (text) => {
 
 
                 <div style={{ justifyContent: "center", display: "flex" ,position: "absolute", bottom: "9%",width:mobile? "80%": "50%"}}>
-                    <div className='chatBox' style={{backgroundColor:"white",  display: "flex", width: "100%", alignItems: "center", boxShadow: "rgba(0,0,0, 0.1) 0px 0px 8px", borderRadius: "15px", height: "60px" }}>
-                        <div onClick={()=>setquizmode(!quizmode)} style={{border:quizmode?"2px solid #9500FF":"none",backgroundColor:quizmode?"#E8CBFB":"#F8ECFF",transition:"none",cursor:"pointer",borderRadius:"8px",padding:"11px",fontSize:"11px",height:"30px",position:"absolute",left:"0px",top:"-40px",color:"#9500FF",display:"flex",alignItems:"center",justifyContent:"center"}}> <img src={quiz} width={14} style={{marginRight:"8px"}} alt="" /> <p style={{color:quizmode?"#9500FF":"rgb(181, 126, 220)",transition:"none"}}><b>Quiz</b></p></div>
-                        <div onClick={()=>setheuristicmode(!heuristicmode)} style={{border:heuristicmode?"2px solid #9500FF":"none",backgroundColor:heuristicmode?"#E8CBFB":"#F8ECFF",transition:"none",cursor:"pointer",borderRadius:"8px",padding:"11px",fontSize:"11px",height:"30px",position:"absolute",left:"80px",top:"-40px",color:"#9500FF",display:"flex",alignItems:"center",justifyContent:"center"}}> <Slack size={14} style={{marginRight:"8px"}} alt="" /> <p style={{color:heuristicmode?"#9500FF":"rgb(181, 126, 220)",transition:"none"}}><b>Heuristic Thinking</b></p></div>
+                    <div className='chatBox' style={{
+                        backgroundColor: "white",  
+                        display: "flex", 
+                        width: "100%", 
+                        alignItems: "center", 
+                        boxShadow: "rgba(0,0,0, 0.1) 0px 0px 8px", 
+                        borderRadius: "15px", 
+                        height: "60px",
+                        position: "relative",
+                        zIndex: "2"
+                    }}>
+                        <div onClick={()=>setquizmode(!quizmode)} style={{
+                            border: quizmode?"2px solid #9500FF":"none",
+                            backgroundColor: quizmode?"#E8CBFB":"#F8ECFF",
+                            transition: "none",
+                            cursor: "pointer",
+                            borderRadius: "8px",
+                            padding: "11px",
+                            fontSize: "11px",
+                            height: "30px",
+                            position: "absolute",
+                            left: "0px",
+                            top: "-40px",
+                            color: "#9500FF",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: "3"
+                        }}> <img src={quiz} width={14} style={{marginRight:"8px"}} alt="" /> <p style={{color:quizmode?"#9500FF":"rgb(181, 126, 220)",transition:"none"}}><b>Quiz</b></p></div>
+                        <div onClick={()=>setheuristicmode(!heuristicmode)} style={{
+                            border: heuristicmode?"2px solid #9500FF":"none",
+                            backgroundColor: heuristicmode?"#E8CBFB":"#F8ECFF",
+                            transition: "none",
+                            cursor: "pointer",
+                            borderRadius: "8px",
+                            padding: "11px",
+                            fontSize: "11px",
+                            height: "30px",
+                            position: "absolute",
+                            left: "80px",
+                            top: "-40px",
+                            color: "#9500FF",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            zIndex: "3"
+                        }}> <Slack size={14} style={{marginRight:"8px"}} alt="" /> <p style={{color:heuristicmode?"#9500FF":"rgb(181, 126, 220)",transition:"none"}}><b>Heuristic Thinking</b></p></div>
                         
                         <div className={`mic-container ${listening ? 'listening' : ''}`}>
                             <Mic
@@ -580,8 +624,21 @@ const formatText = (text) => {
                     </div>
                 </div>
 
-                <div className="layout3" style={{ display: layout3, paddingTop: mobile ? "10vh" : "50px" }}>
-                    <div className="chatHistory">
+                <div className="layout3" style={{ 
+                    display: layout3, 
+                    paddingTop: mobile ? "10vh" : "50px",
+                    position: "relative",
+                    overflow: "hidden"
+                }}>
+                    <div className="chatHistory" style={{
+                        position: "relative",
+                        zIndex: "1",
+                        height: "115%",
+                        overflowY: "auto",
+                        paddingBottom: "40px",
+                        maskImage: "linear-gradient(to bottom, black calc(100% - 40px), transparent 100%)",
+                        WebkitMaskImage: "linear-gradient(to bottom, black calc(100% - 40px), transparent 100%)"
+                    }}>
                         {chatHistory.map((chat, index) => {
                             return (
                                 <div key={index} className={`chatBubble ${chat.type} ${isMobile() ? 'mobile' : ''}`} style={{maxWidth:isMobile()?"100%":"90%"} }>
@@ -622,8 +679,9 @@ const formatText = (text) => {
                                                             marginTop: showHeuristic[index] ? '8px' : '0',
                                                             transition: `max-height ${showHeuristic[index] ? '0.5s' : '0.3s'} ease-in-out, 
                                                                         opacity 0.3s ${showHeuristic[index] ? '0.1s' : ''} ease-in-out,
-                                                                        margin 0.3s ease-in-out`
-                                                        }}
+                                                                        margin 0.3s ease-in-out`,
+                                                            zIndex:"-100"
+                                                                    }}
                                                     >
                                                         {/* {alert(chat.thinking)} */}
                                                         <HeuristicThink response={chat.thinking} />
