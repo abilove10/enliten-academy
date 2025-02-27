@@ -20,6 +20,7 @@ export default function GoogleCallback() {
                 }
                 
                 if (code) {
+                    alert("success 3");
                     // console.log('Received authorization code');
                     // Send message to parent window
                     window.opener?.postMessage({
