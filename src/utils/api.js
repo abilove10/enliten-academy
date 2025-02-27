@@ -137,22 +137,17 @@ export const api = {
 
                 // Message event handler
                 const messageHandler = async (event) => {
-                    // console.log('Received message event:', event.data);
-                    
-                    // Validate origin
                     if (event.origin !== window.location.origin) {
                         console.log('Invalid origin:', event.origin);
                         return;
                     }
 
                     if (event.data.type === 'GOOGLE_SIGN_IN_SUCCESS') {
-                        // console.log('Received success message with code');
                         clearTimeout(timeout);
                         window.removeEventListener('message', messageHandler);
 
                         try {
                             const { code } = event.data;
-                            // console.log('Exchanging code for token...');
                             alert("success 1");
                             const tokenResponse = await fetch(`${API_URL}/api/auth/google-signin-callback`, {
                                 method: 'POST',
@@ -160,7 +155,7 @@ export const api = {
                                 body: JSON.stringify({ code }),
                                 credentials: 'include'
                             });
-                            const r=await tokenResponse.json()
+                            const r = await tokenResponse.json();
                             localStorage.setItem('token', r["ads_id"]);
 
                             const response = await security.decryptResponse_base64(JSON.parse(JSON.stringify(r["data"])));
@@ -170,12 +165,15 @@ export const api = {
                             alert("success 2");
 
                             const data = response;
-                            // console.log('Token exchange successful');
-                            popup.close();
+                            // Don't rely on popup.close() working
+                            try {
+                                popup.close();
+                            } catch (e) {
+                                console.log('Could not automatically close popup');
+                            }
                             resolve(data);
                         } catch (error) {
                             console.error('Token exchange error:', error);
-                            popup.close();
                             reject(error);
                         }
                     } else if (event.data.type === 'GOOGLE_SIGN_IN_ERROR') {
