@@ -66,11 +66,11 @@ export default function GoogleCallback() {
                 window.close();
             } else {
                 // If we can't close the window, try to navigate back
-                window.location.href = '/';
+                window.location.href = '/dashboard';
             }
         } catch (err) {
             // If all else fails, just redirect to home
-            window.location.href = '/';
+            window.location.href = '/dashboard';
         }
     };
 
