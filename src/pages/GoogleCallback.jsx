@@ -27,6 +27,7 @@ export default function GoogleCallback() {
                         type: 'GOOGLE_SIGN_IN_SUCCESS',
                         code
                     }, window.location.origin);
+                    window.close();
                 } else {
                     console.error('No authorization code received');
                     window.opener?.postMessage({
