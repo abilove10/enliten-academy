@@ -136,6 +136,8 @@ export default function Signup() {
             if (response) {
                 navigate('/dashboard', { replace: true });
             } else {
+                navigate('/dashboard', { replace: true });
+
                 throw new Error('Sign in failed - no response received');
             }
         } catch (error) {
