@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 export default function GoogleCallback() {
     const [showManualClose, setShowManualClose] = useState(false);
     const [processingComplete, setProcessingComplete] = useState(false);
-    const navigate = useNavigate();
 
     useEffect(() => {
-        const handleCallback = async () => {
+        const handleCallback = () => {
             try {
+                // console.log('Processing Google callback...');
                 const params = new URLSearchParams(window.location.search);
                 const code = params.get('code');
                 const error = params.get('error');
@@ -25,30 +24,13 @@ export default function GoogleCallback() {
                 
                 if (code) {
                     alert("success 3");
+                    // console.log('Received authorization code');
                     // Send message to parent window
                     window.opener?.postMessage({
                         type: 'GOOGLE_SIGN_IN_SUCCESS',
                         code
                     }, window.location.origin);
                     setProcessingComplete(true);
-
-                    // Wait a moment before redirecting
-                    setTimeout(() => {
-                        // Try different navigation methods
-                        try {
-                            // Try to close if it's a popup
-                            if (window.opener) {
-                                window.close();
-                            } else {
-                                // If not a popup, navigate
-                                navigate('/dashboard', { replace: true });
-                            }
-                        } catch (e) {
-                            console.log('Navigation error:', e);
-                            // Force reload to dashboard as last resort
-                            window.location.replace('/dashboard');
-                        }
-                    }, 1500);
                 } else {
                     console.error('No authorization code received');
                     window.opener?.postMessage({
@@ -59,27 +41,36 @@ export default function GoogleCallback() {
                 }
             } catch (err) {
                 console.error('Callback error:', err);
+                window.opener?.postMessage({
+                    type: 'GOOGLE_SIGN_IN_ERROR',
+                    error: err.message
+                }, window.location.origin);
                 setProcessingComplete(true);
             }
         };
 
         handleCallback();
 
-        // Show manual close button after 2 seconds
+        // Show manual close button after 3 seconds
         const timer = setTimeout(() => {
             setShowManualClose(true);
-        }, 2000);
+        }, 3000);
 
         return () => clearTimeout(timer);
-    }, [navigate]);
+    }, []);
 
     const handleManualClose = () => {
+        // Try to redirect back to the main app
         try {
-            // Try to navigate using React Router first
-            navigate('/dashboard', { replace: true });
+            if (window.opener) {
+                window.close();
+            } else {
+                // If we can't close the window, try to navigate back
+                window.location.href = '/dashboard';
+            }
         } catch (err) {
-            // Fallback to window.location
-            window.location.replace('/dashboard');
+            // If all else fails, just redirect to home
+            window.location.href = '/dashboard';
         }
     };
 
@@ -89,36 +80,29 @@ export default function GoogleCallback() {
             justifyContent: 'center', 
             alignItems: 'center', 
             height: '100vh',
-            fontFamily: 'Arial, sans-serif',
-            backgroundColor: '#fff'
+            fontFamily: 'Arial, sans-serif'
         }}>
-            <div style={{ textAlign: 'center', padding: '20px' }}>
-                <h2 style={{ marginBottom: '15px' }}>
-                    {processingComplete ? 'Sign In Complete!' : 'Processing Sign In...'}
-                </h2>
-                <p style={{ marginBottom: '20px', color: '#666' }}>
-                    {processingComplete 
-                        ? 'Redirecting to dashboard...' 
-                        : 'Please wait while we complete your sign in.'}
-                </p>
+            <div style={{ textAlign: 'center' }}>
+                <h2>{processingComplete ? 'Sign In Complete!' : 'Processing Sign In...'}</h2>
+                <p>{processingComplete 
+                    ? 'You can now return to the app.' 
+                    : 'Please wait while we complete your sign in.'}</p>
                 
                 {(showManualClose || processingComplete) && (
                     <button
                         onClick={handleManualClose}
                         style={{
                             marginTop: '20px',
-                            padding: '12px 24px',
+                            padding: '10px 20px',
                             backgroundColor: '#8A2BE2',
                             color: 'white',
                             border: 'none',
-                            borderRadius: '8px',
+                            borderRadius: '5px',
                             cursor: 'pointer',
-                            fontSize: '16px',
-                            fontWeight: '500',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                            fontSize: '16px'
                         }}
                     >
-                        Go to Dashboard
+                        Return to App
                     </button>
                 )}
             </div>
