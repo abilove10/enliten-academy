@@ -102,7 +102,6 @@ export const api = {
 
     async googleSignIn() {
         try {
-            // console.log('Fetching Google Sign In URL...');
             localStorage.removeItem(USER_DATA_CACHE_KEY);
             localStorage.removeItem('cached_assessments');
 
@@ -113,9 +112,7 @@ export const api = {
             }
             
             const { url } = await response.json();
-            // console.log('Received Google Sign In URL:', url);
             
-            // Open popup with specific features
             const popup = window.open(
                 url, 
                 'Google Sign In',
@@ -123,24 +120,22 @@ export const api = {
             );
             
             if (!popup) {
-                alert("Popup was blocked by the browser. Please enable popups and try again.");
-                throw new Error('Popup was blocked by the browser. Please enable popups and try again.');
+                throw new Error('Popup was blocked. Please enable popups and try again.');
             }
 
             return new Promise((resolve, reject) => {
-                // Set timeout for the entire operation
                 const timeout = setTimeout(() => {
                     window.removeEventListener('message', messageHandler);
-                    popup.close();
+                    try {
+                        popup.close();
+                    } catch (e) {
+                        console.log('Could not close popup');
+                    }
                     reject(new Error('Sign in timed out. Please try again.'));
                 }, 120000); // 2 minutes timeout
 
-                // Message event handler
                 const messageHandler = async (event) => {
-                    if (event.origin !== window.location.origin) {
-                        console.log('Invalid origin:', event.origin);
-                        return;
-                    }
+                    if (event.origin !== window.location.origin) return;
 
                     if (event.data.type === 'GOOGLE_SIGN_IN_SUCCESS') {
                         clearTimeout(timeout);
@@ -148,47 +143,48 @@ export const api = {
 
                         try {
                             const { code } = event.data;
-                            alert("success 1");
                             const tokenResponse = await fetch(`${API_URL}/api/auth/google-signin-callback`, {
                                 method: 'POST',
                                 headers: getHeaders(),
                                 body: JSON.stringify({ code }),
                                 credentials: 'include'
                             });
-                            const r = await tokenResponse.json();
-                            localStorage.setItem('token', r["ads_id"]);
 
-                            const response = await security.decryptResponse_base64(JSON.parse(JSON.stringify(r["data"])));
                             if (!tokenResponse.ok) {
-                                throw new Error(`Token exchange failed: ${tokenResponse.status}`);
+                                throw new Error(`Sign in failed (${tokenResponse.status})`);
                             }
-                            alert("success 2");
 
-                            const data = response;
-                            // Don't rely on popup.close() working
+                            const r = await tokenResponse.json();
+                            if (!r.ads_id) {
+                                throw new Error('Invalid response from server');
+                            }
+
+                            localStorage.setItem('token', r.ads_id);
+                            const response = await security.decryptResponse_base64(r.data);
+                            
                             try {
                                 popup.close();
                             } catch (e) {
-                                console.log('Could not automatically close popup');
+                                console.log('Could not close popup');
                             }
-                            resolve(data);
+                            resolve(response);
                         } catch (error) {
                             console.error('Token exchange error:', error);
                             reject(error);
                         }
                     } else if (event.data.type === 'GOOGLE_SIGN_IN_ERROR') {
-                        console.error('Received error message:', event.data.error);
                         clearTimeout(timeout);
                         window.removeEventListener('message', messageHandler);
-                        popup.close();
+                        try {
+                            popup.close();
+                        } catch (e) {
+                            console.log('Could not close popup');
+                        }
                         reject(new Error(event.data.error || 'Sign in failed'));
                     }
                 };
 
-                // Add message event listener
                 window.addEventListener('message', messageHandler);
-
-                // Focus the popup
                 popup.focus();
             });
         } catch (error) {
