@@ -113,6 +113,16 @@ export const api = {
             
             const { url } = await response.json();
             
+            // Open in same window for mobile app
+            if (window.navigator.userAgent.includes('Mobile')) {
+                window.location.href = url;
+                return new Promise((resolve) => {
+                    // This will be handled by the callback page
+                    resolve();
+                });
+            }
+            
+            // Desktop behavior - open popup
             const popup = window.open(
                 url, 
                 'Google Sign In',
