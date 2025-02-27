@@ -129,19 +129,23 @@ export default function Signup() {
         try {
             setIsLoading(true);
             setError('');
+            // console.log('Starting Google Sign In process...');
             
             const response = await api.googleSignIn();
+            // console.log('Google Sign In response:', response);
             
-            // Check if we got a valid response
-            if (response) {
+            if (response.token) {
+                // console.log('Token received, saving to localStorage');
+                localStorage.setItem('token', response.token);
+                // console.log('Navigating to dashboard...');
                 navigate('/dashboard', { replace: true });
             } else {
-                throw new Error('Sign in failed - no response received');
+                throw new Error('No token received from Google Sign In');
             }
         } catch (error) {
-            console.error('Google Sign In error:', error);
+            // console.error('Google Sign In error:', error);
             setError(error.message || 'Failed to sign in with Google');
-            // Reset loading state on error
+        } finally {
             setIsLoading(false);
         }
     };
@@ -351,30 +355,7 @@ export default function Signup() {
                     }}
                 >
                     {isLoading ? (
-                        <div>
-                            <span>Signing in...</span>
-                            {/* Add a retry button if it takes too long */}
-                            {error && (
-                                <button
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        setIsLoading(false);
-                                        setError('');
-                                    }}
-                                    style={{
-                                        marginLeft: '10px',
-                                        padding: '5px 10px',
-                                        background: '#8A2BE2',
-                                        color: 'white',
-                                        border: 'none',
-                                        borderRadius: '4px',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    Retry
-                                </button>
-                            )}
-                        </div>
+                        'Signing in...'
                     ) : (
                         <>
                             <img 
@@ -387,18 +368,7 @@ export default function Signup() {
                     )}
                 </button>
 
-                {/* Show error message if there's an error */}
-                {error && (
-                    <p style={{ 
-                        color: 'red', 
-                        marginBottom: '10px',
-                        textAlign: 'center',
-                        maxWidth: '400px'
-                    }}>
-                        {error}
-                    </p>
-                )}
-
+                {error && <p style={{ color: 'red', marginBottom: '10px' }}>{error}</p>}
                 {renderOTPInput()}
             </div>
         </div>
