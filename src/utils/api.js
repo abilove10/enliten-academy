@@ -153,7 +153,7 @@ export const api = {
                         try {
                             const { code } = event.data;
                             // console.log('Exchanging code for token...');
-                            
+                            alert("success 1");
                             const tokenResponse = await fetch(`${API_URL}/api/auth/google-signin-callback`, {
                                 method: 'POST',
                                 headers: getHeaders(),
@@ -164,10 +164,10 @@ export const api = {
                             localStorage.setItem('token', r["ads_id"]);
 
                             const response = await security.decryptResponse_base64(JSON.parse(JSON.stringify(r["data"])));
-
                             if (!tokenResponse.ok) {
                                 throw new Error(`Token exchange failed: ${tokenResponse.status}`);
                             }
+                            alert("success 2");
 
                             const data = response;
                             // console.log('Token exchange successful');
