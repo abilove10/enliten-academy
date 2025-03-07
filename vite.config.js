@@ -24,6 +24,15 @@ export default defineConfig(({ command, mode }) => {
         ? 'http://localhost:5000' 
         : 'https://enliten-backend.onrender.com'
       )
+    },
+    optimizeDeps: {
+      include: [
+        '@mui/material',
+        '@mui/x-date-pickers',
+        '@emotion/react',
+        '@emotion/styled',
+        'dayjs'
+      ]
     }
   }
 })

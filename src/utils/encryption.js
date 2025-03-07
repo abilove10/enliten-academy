@@ -100,12 +100,13 @@ export class SecurityClient {
     }
     async  decryptResponse_base64(response) {
         try {
-            // console.log('data: '+atob(response.data))
+            console.log('data: '+atob(response.data))
             const encrypted_base64 = response.data;
-            if(this.aes_key==''){
-                this.aes_key=await this.get_key()
-                if(this.aes_key==''){
-                    window.location.href='/';
+            if (!this.aes_key) {
+                this.aes_key = await this.get_key();
+                if (!this.aes_key) {
+                    window.location.href = '/';
+                    return;
                 }
             }
             const aes_key = this.aes_key; // Assuming this returns base64 encoded key
@@ -134,7 +135,7 @@ export class SecurityClient {
                 false,
                 ['decrypt']
             );
-            
+
             // Decrypt the data
             const decrypted = await window.crypto.subtle.decrypt(
                 {
@@ -145,7 +146,7 @@ export class SecurityClient {
                 cryptoKey,
                 new Uint8Array([...ciphertext, ...tag]) // Combine ciphertext and tag
             );
-            
+
             // Convert the decrypted array buffer to string
             const decoder = new TextDecoder();
             const decryptedText = decoder.decode(decrypted);

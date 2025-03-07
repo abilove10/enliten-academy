@@ -361,5 +361,57 @@ export const api = {
         }
     },
 
+    async fetchNews(formattedDate) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const cacheKey = `news_cache_${formattedDate}`;
+            const cachedData = localStorage.getItem(cacheKey);
+            // if (cachedData) {
+            //     const { data, timestamp } = JSON.parse(cachedData);
+            //     const now = new Date().getTime();
+                
+            //     try{
+
+            //         if (now - timestamp < CACHE_EXPIRY_TIME) {
+            //             return await security.decryptResponse_base64(data);
+            //         }
+            //     }catch(error){
+            //         console.error('Error fetching news:', error);
+            //         localStorage.removeItem(`news_cache_${formattedDate}`);
+            //         fetchNews(formattedDate);
+            //     }
+
+            //         localStorage.removeItem(cacheKey);
+            // }
+
+            const response = await this.fetchWithRetry(`${API_URL}/api/news/${formattedDate}`, {
+                method: 'GET',
+                headers: getHeaders(token),
+                credentials: 'include'
+            });
+
+            if (!response || !response.data) {
+                throw new Error('Invalid response format');
+            }
+            const decryptedData = await security.decryptResponse_base64(response.data);
+            
+            // Cache the encrypted response
+            localStorage.setItem(cacheKey, JSON.stringify({
+                data: response.data,
+                timestamp: new Date().getTime()
+            }));
+
+            return decryptedData;
+        } catch (error) {
+
+            console.error('Error fetching news:', error);
+            throw error;
+        }
+    },
+
     // Add other API methods here
 }; 
