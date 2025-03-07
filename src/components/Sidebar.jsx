@@ -6,6 +6,7 @@ import Logo from '../assets/logo/logo.png';
 import { useSidebar } from '../context/SidebarContext';
 import defaultAvatar from '../assets/images/default-avatar.png'; // Make sure to add this image
 import { api } from '../utils/api';
+import './Sidebar.css';
 
 const API_URL = config.API_URL;
 
@@ -19,6 +20,7 @@ export default function Sidebar() {
     const [notifications, setNotifications] = useState([]);
     const [showNotifications, setShowNotifications] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [subscriptionStatus, setSubscriptionStatus] = useState(null);
     
     const isActive = (path) => {
         return location.pathname === path;
@@ -126,6 +128,53 @@ export default function Sidebar() {
             document.removeEventListener('mousedown', handleClickOutside);
         };
     }, [showNotifications]);
+
+    useEffect(() => {
+        fetchSubscriptionStatus();
+    }, []);
+
+    const fetchSubscriptionStatus = async () => {
+        try {
+            const status = await api.fetchSubscriptionStatus();
+            console.log("Subscription status:", status); // Debug log
+            setSubscriptionStatus(status);
+        } catch (err) {
+            console.error('Error fetching subscription status:', err);
+        }
+    };
+
+    const getSubscriptionBadge = () => {
+        if (!subscriptionStatus) return null;
+
+        const isActive = subscriptionStatus.status === 'active';
+        const endDate = subscriptionStatus.end_date ? new Date(subscriptionStatus.end_date) : null;
+        const daysLeft = endDate ? Math.ceil((endDate - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+
+        return (
+            <div 
+                className={`subscription-badge ${isActive ? 'premium' : 'free'}`}
+                onClick={() => navigate('/subscription')}
+            >
+                <div className="badge-content">
+                    <div className={`subscription-status ${isActive ? 'active' : 'inactive'}`}>
+                        <div className="status-dot"></div>
+                        <span>{isActive ? 'Premium' : ''}</span>
+                    </div>
+                    <div className="subscription-info">
+                        {isActive ? (
+                            <span>{daysLeft} days left</span>
+                        ) : (
+                            <span className="upgrade-text">Upgrade now</span>
+                        )}
+                    </div>
+                </div>
+                {/* <div className="badge-icon">
+                    {isActive ? '👑' : '⭐'}
+                </div> */}
+            </div>
+        );
+    };
+
     const ProfileSection = () => (
         <div style={{
             display: 'flex',
@@ -395,6 +444,9 @@ export default function Sidebar() {
                     </div>
                     
                     <ProfileSection />
+                    
+                    {/* Add Subscription Badge here */}
+                    {getSubscriptionBadge()}
                 </div>
                 
                 <div style={{ flex: 1 }}>

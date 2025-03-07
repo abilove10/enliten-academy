@@ -1,0 +1,135 @@
+.subscription-badge {
+  padding: 16px;
+  margin: 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Premium badge styles */
+.subscription-badge.premium {
+  background: linear-gradient(135deg, #8A2BE2 0%, #9B4EE3 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.2);
+}
+
+/* Free badge styles */
+/* .subscription-badge.free {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  background-color: white;
+  border: 1px solid #dee2e6;
+  color: #495057;
+} */
+.subscription-badge.free {
+  background: linear-gradient(135deg, #8A2BE2 0%, #9B4EE3 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.2);
+}
+
+.badge-content {
+  display: flex;
+  /* flex-direction: column;
+  gap: 4px;
+  flex: 1; */
+}
+
+.subscription-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.subscription-status.active .status-dot {
+  background-color: #4CAF50;
+  box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+  animation: pulse 2s infinite;
+}
+
+.subscription-status.inactive .status-dot {
+  background-color: #FFA726;
+  box-shadow: 0 0 0 2px rgba(255, 167, 38, 0.2);
+}
+
+.subscription-status span {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.subscription-info {
+  font-size: 12px;
+  margin-left: 16px;
+}
+
+.upgrade-text {
+  /* color: #8A2BE2; */
+  color: white;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.upgrade-text::after {
+  content: '→';
+  font-size: 14px;
+  transition: transform 0.3s ease;
+}
+
+.badge-icon {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 20px;
+  opacity: 0.9;
+}
+
+/* Hover effects */
+.subscription-badge:hover {
+  transform: translateY(-2px);
+}
+
+.subscription-badge.premium:hover {
+  box-shadow: 0 6px 20px rgba(138, 43, 226, 0.3);
+}
+
+.subscription-badge.free:hover {
+  /* background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); */
+  border-color: #8A2BE2;
+}
+
+.subscription-badge.free:hover .upgrade-text::after {
+  transform: translateX(4px);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(76, 175, 80, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .subscription-badge {
+    margin: 12px;
+    padding: 12px;
+  }
+  
+  .badge-icon {
+    right: 12px;
+  }
+} 

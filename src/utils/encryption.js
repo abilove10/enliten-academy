@@ -100,7 +100,7 @@ export class SecurityClient {
     }
     async  decryptResponse_base64(response) {
         try {
-            console.log('data: '+atob(response.data))
+            // console.log('data: '+atob(response.data))
             const encrypted_base64 = response.data;
             if (!this.aes_key) {
                 this.aes_key = await this.get_key();

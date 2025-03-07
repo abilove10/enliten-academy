@@ -1,0 +1,147 @@
+.subscription-container {
+  min-height: 100vh;
+  background-color: #FCF6FF;
+  padding: 48px 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.subscription-card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+  overflow: hidden;
+}
+
+.subscription-content {
+  padding: 32px;
+}
+
+.subscription-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.error-alert {
+  background-color: #FEE2E2;
+  color: #DC2626;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.pricing-card {
+  background-color: #F8F7FF;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.pricing-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E5E7EB;
+}
+
+.plan-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: #333;
+}
+
+.price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #8A2BE2;
+}
+
+.features-list {
+  margin-bottom: 24px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  color: #4B5563;
+}
+
+.checkmark {
+  color: #8A2BE2;
+  font-size: 18px;
+  margin-right: 12px;
+}
+
+.subscription-action {
+  text-align: center;
+}
+
+.price-subtitle {
+  font-size: 14px;
+  color: #6B7280;
+  margin-bottom: 16px;
+}
+
+.subscribe-button {
+  background-color: #8A2BE2;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 500;
+  width: 100%;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.subscribe-button:hover {
+  background-color: #7B1FA2;
+}
+
+.subscribe-button:disabled {
+  background-color: #9CA3AF;
+  cursor: not-allowed;
+}
+
+.terms-text {
+  text-align: center;
+  font-size: 12px;
+  color: #6B7280;
+  margin-top: 24px;
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .subscription-container {
+    padding: 16px;
+  }
+
+  .subscription-content {
+    padding: 24px 16px;
+  }
+
+  .subscription-title {
+    font-size: 24px;
+  }
+
+  .pricing-header {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+
+  .price {
+    font-size: 20px;
+  }
+} 

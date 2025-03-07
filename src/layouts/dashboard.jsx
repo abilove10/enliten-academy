@@ -445,15 +445,19 @@ export default function Dashboard() {
                     )}
                     
                     {isSidebarOpen && (
-                        <div style={{
-                            backgroundColor: '#8A2BE2',
-                            padding: '10px 20px',
-                            borderRadius: '30px',
-                            color: 'white',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            marginBottom: '20px'
-                        }}>
+                        <div 
+                            onClick={() => navigate('/subscription')} 
+                            className="cursor-pointer hover:text-blue-600 transition-colors"
+                            style={{
+                                backgroundColor: '#8A2BE2',
+                                padding: '10px 20px',
+                                borderRadius: '30px',
+                                color: 'white',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                marginBottom: '20px'
+                            }}
+                        >
                             <span style={{ marginRight: '10px' }}>🎉</span>
                             Get Yearly subscription @ ₹1 per day
                         </div>

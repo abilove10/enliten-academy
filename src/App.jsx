@@ -6,6 +6,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
 import Ai from './layouts/Ai'
 import News from './components/News'
+import Subscription from './components/Subscription'
 //import './App.css'  
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
           <News />
         </ProtectedRoute>
       } />
+      <Route path="/subscription" element={<Subscription />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

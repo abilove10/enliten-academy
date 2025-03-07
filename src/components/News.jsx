@@ -63,7 +63,7 @@ const News = () => {
       setNewsData(response);
     } catch (error) {
       console.error('Error fetching news:', error);
-      setError('Failed to fetch news. Please try again later.');
+      setError('No news available for this date');
       setNewsData(null);
     } finally {
       setLoading(false);
@@ -138,13 +138,18 @@ const News = () => {
 
   if (error) {
     return (
+      <>
+      <Sidebar />
       <div style={{ 
         display: 'flex', 
         flexDirection: 'column',
         justifyContent: 'center', 
         alignItems: 'center', 
         height: '100vh',
-        padding: '20px'
+        padding: '20px',
+        backgroundColor: 'white',
+        paddingLeft: '400px',
+        width: '100%'
       }}>
         <p style={{ color: 'red', marginBottom: '20px' }}>{error}</p>
         <button 
@@ -161,6 +166,7 @@ const News = () => {
           Retry
         </button>
       </div>
+      </>
     );
   }
 

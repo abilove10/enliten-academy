@@ -44,6 +44,8 @@ const USER_DATA_CACHE_KEY = 'cached_user_data';
 // const CACHE_EXPIRY_TIME = 15 * 60 * 1000;
 const CACHE_EXPIRY_TIME = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
 
+const SUBSCRIPTION_CACHE_KEY = 'cached_subscription_status';
+
 // Clear cache on page reload
 window.addEventListener('load', () => {
     localStorage.removeItem(USER_DATA_CACHE_KEY);
@@ -105,6 +107,7 @@ export const api = {
             // console.log('Fetching Google Sign In URL...');
             localStorage.removeItem(USER_DATA_CACHE_KEY);
             localStorage.removeItem('cached_assessments');
+            localStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
 
             const response = await fetch(`${API_URL}/api/auth/google-signin-url`);
             
@@ -409,6 +412,95 @@ export const api = {
         } catch (error) {
 
             console.error('Error fetching news:', error);
+            throw error;
+        }
+    },
+
+    async createSubscription() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await this.fetchWithRetry(`${API_URL}/api/subscription/create`, {
+                method: 'POST',
+                headers: getHeaders(token),
+                credentials: 'include'
+            });
+
+            const decryptedResponse = await security.decryptResponse_base64(response.data);
+            return decryptedResponse;
+        } catch (error) {
+            console.error('Error creating subscription:', error);
+            throw error;
+        }
+    },
+
+    async verifyPayment(paymentDetails) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await this.fetchWithRetry(`${API_URL}/api/subscription/verify-payment`, {
+                method: 'POST',
+                headers: getHeaders(token),
+                credentials: 'include',
+                body: JSON.stringify(paymentDetails)
+            });
+
+            if (!response.data) {
+                throw new Error('Invalid response format');
+            }
+
+            const decryptedResponse = await security.decryptResponse_base64(response.data);
+            return decryptedResponse;
+        } catch (error) {
+            console.error('Error verifying payment:', error);
+            throw error;
+        }
+    },
+
+    async fetchSubscriptionStatus() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            // Check cache first
+            const cachedData = localStorage.getItem(SUBSCRIPTION_CACHE_KEY);
+            if (cachedData) {
+                const { data, timestamp } = JSON.parse(cachedData);
+                const now = new Date().getTime();
+                
+                // If cache hasn't expired, return cached data
+                if (now - timestamp < CACHE_EXPIRY_TIME) {
+                    return await security.decryptResponse_base64(data);
+                }
+                // If expired, remove the cached data
+                localStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
+            }
+
+            const response = await this.fetchWithRetry(`${API_URL}/api/subscription/status`, {
+                method: 'GET',
+                headers: getHeaders(token),
+                credentials: 'include'
+            });
+
+            const decryptedResponse = await security.decryptResponse_base64(response.data);
+            
+            // Cache the response with timestamp
+            localStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify({
+                data: response.data,
+                timestamp: new Date().getTime()
+            }));
+
+            return decryptedResponse;
+        } catch (error) {
+            console.error('Error fetching subscription status:', error);
             throw error;
         }
     },
