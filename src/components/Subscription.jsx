@@ -46,70 +46,46 @@ const Subscription = () => {
 
       const response = await api.createSubscription();
       
-      const options = {
-        key: response.key_id,
-        subscription_id: response.subscription_id,
-        name: "Enliten Academy",
-        description: "Premium Yearly Subscription",
-        image: "https://enliten.org.in/logo.png", // Replace with your actual logo URL
-        currency: response.currency,
-        prefill: {
-          name: response.name,
-          email: response.email,
-          contact: response.phone
-        },
-        handler: async function(response) {
-          try {
-            console.log("Payment response:", response);
-            
-            const verifyResponse = await api.verifyPayment({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_subscription_id: response.razorpay_subscription_id,
-              razorpay_signature: response.razorpay_signature
-            });
-
-            if (verifyResponse.status === 'success') {
-              await checkSubscriptionStatus();
-              navigate('/dashboard');
-            } else {
-              throw new Error(verifyResponse.message || 'Verification failed');
-            }
-          } catch (err) {
-            console.error("Payment verification failed:", err);
-            setError('Payment verification failed: ' + (err.message || 'Please contact support'));
-            setLoading(false);
-          }
-        },
-        notes: {
-          user_id: response.user_id
-        },
-        theme: {
-          color: "#8A2BE2"
-        },
-        modal: {
-          ondismiss: function() {
-            setLoading(false);
-          },
-          escape: false,
-          backdropclose: false
-        }
-      };
-
-      const rzp = new window.Razorpay(options);
-      
-      rzp.on('payment.failed', function(response) {
-        console.error("Payment failed:", response.error);
-        setError(response.error.description || 'Payment failed');
-        setLoading(false);
-      });
-
-      rzp.open();
+      if (response.short_url) {
+        // Store payment link ID in localStorage for verification
+        localStorage.setItem('pending_payment_id', response.payment_link_id);
+        
+        // Open payment link in same window
+        window.location.href = response.short_url;
+      } else {
+        throw new Error('Invalid payment link');
+      }
     } catch (err) {
       console.error("Subscription error:", err);
       setError(err.message || 'Failed to initiate subscription');
       setLoading(false);
     }
   };
+
+  // Add this to handle payment verification after redirect
+  useEffect(() => {
+    const verifyPayment = async () => {
+      const pendingPaymentId = localStorage.getItem('pending_payment_id');
+      if (pendingPaymentId) {
+        try {
+          const response = await api.checkPaymentStatus(pendingPaymentId);
+          if (response.status === 'success') {
+            await checkSubscriptionStatus();
+            localStorage.removeItem('pending_payment_id');
+            // Redirect to homepage on success
+            navigate('/');
+          }
+        } catch (err) {
+          console.error("Payment verification failed:", err);
+          setError('Payment verification failed. Please contact support.');
+        }
+      }
+    };
+
+    // Check payment status every 2 seconds until success
+    const interval = setInterval(verifyPayment, 2000);
+    return () => clearInterval(interval);
+  }, []);
 
   if (loading) {
     return <LoadingSpinner />;

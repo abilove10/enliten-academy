@@ -505,5 +505,27 @@ export const api = {
         }
     },
 
+    async checkPaymentStatus(paymentLinkId) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const response = await this.fetchWithRetry(`${API_URL}/api/subscription/check-payment`, {
+                method: 'POST',
+                headers: getHeaders(token),
+                credentials: 'include',
+                body: JSON.stringify({ payment_link_id: paymentLinkId })
+            });
+
+            const decryptedResponse = await security.decryptResponse_base64(response.data);
+            return decryptedResponse;
+        } catch (error) {
+            console.error('Error checking payment status:', error);
+            throw error;
+        }
+    },
+
     // Add other API methods here
 }; 

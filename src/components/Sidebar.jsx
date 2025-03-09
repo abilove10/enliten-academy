@@ -175,6 +175,23 @@ export default function Sidebar() {
         );
     };
 
+    // Add this effect to refresh subscription status periodically
+    useEffect(() => {
+        const checkStatus = async () => {
+            try {
+                const status = await api.fetchSubscriptionStatus();
+                setSubscriptionStatus(status);
+            } catch (err) {
+                console.error('Error fetching subscription status:', err);
+            }
+        };
+
+        // Check immediately and then every 30 seconds
+        checkStatus();
+        const interval = setInterval(checkStatus, 30000);
+        return () => clearInterval(interval);
+    }, []);
+
     const ProfileSection = () => (
         <div style={{
             display: 'flex',
