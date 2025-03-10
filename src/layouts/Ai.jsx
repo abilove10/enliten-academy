@@ -341,8 +341,8 @@ const formatText = (text) => {
         // Add user message to chat history
         setChatHistory(prev => [...prev, { type: 'user', text: q }]);
 
-        // axios.post("http://localhost:5000/chat",
-        axios.post("https://api.enliten.org.in/chat",
+        axios.post("http://localhost:5000/chat",
+        // axios.post("https://api.enliten.org.in/chat",
             { 
                 message: q,
                 isQuizMode: quizmode, // Make sure this is being sent
@@ -387,12 +387,24 @@ const formatText = (text) => {
             .catch(error => {
                 console.error('Error:', error);
                 setlayout2("none");
+                setlayout3("flex");
                 // Handle error in chat
+
+                if (error.response && error.response.status === 429) {
+                    // Handle rate limit exceeded
+                    setChatHistory(prev => [...prev, { 
+                        type: 'ai', 
+                        text: "You have reached the daily Chat limit 5 chats per day. Please upgrade your account for unlimited access.",
+                        label: 'normal chat'
+                    }]);
+                }else{
+
                 setChatHistory(prev => [...prev, { 
                     type: 'ai', 
                     text: "Sorry, I encountered an error. Please try again.",
                     label: 'normal chat' 
-                }]);
+                    }]);
+                }
             });
     }
 
