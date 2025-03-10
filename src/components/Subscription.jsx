@@ -51,7 +51,8 @@ const Subscription = () => {
         localStorage.setItem('pending_payment_id', response.payment_link_id);
         
         // Open payment link in same window
-        window.location.href = response.short_url;
+        // window.location.href = response.short_url;
+        window.open(response.short_url);
       } else {
         throw new Error('Invalid payment link');
       }
