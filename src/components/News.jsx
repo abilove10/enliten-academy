@@ -23,6 +23,28 @@ const News = () => {
   // Usage in a React component 
     const mobile = isMobile(); 
 
+    function convertTimestamp(timestampString) {
+      const date = new Date(timestampString);
+    
+      if (isNaN(date)) {
+        return "Invalid timestamp"; // Handle invalid input
+      }
+    
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+      const day = String(date.getDate()).padStart(2, '0');
+      const hours = String(date.getHours()).padStart(2, '0');
+      const minutes = String(date.getMinutes()).padStart(2, '0');
+      const seconds = String(date.getSeconds()).padStart(2, '0');
+      const milliseconds = String(date.getMilliseconds()).padStart(3, '0'); //if you want milliseconds.
+    
+      // return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}.${milliseconds}`; //add milliseconds if you want them
+      //or
+      // return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`; //if you do not want milliseconds.
+      return `${hours}:${minutes}`; //if you do not want milliseconds.
+      
+    }
+
   // Get sidebar state
   const { isSidebarOpen } = useSidebar();
   const [contentWidth, setContentWidth] = useState('100%');
@@ -190,7 +212,7 @@ const News = () => {
         <div style={{marginTop:mobile?'15%':'1%'}} className="header bg-[#1a237e] text-white p-5 rounded-lg mb-5 text-center">
           <h2 className="text-3xl font-bold" >Tamil Nadu Current Affairs - Enliten Academy</h2>
           <div className="mt-2 flex items-center justify-center" style={{display: 'flex',alignItems: 'center',alignmentBaseline:'central',position:'relative',left:'0px',marginTop:'10px'}}>
-            <p className="mr-2" style={{marginRight:'10px'}}>Last Updated:</p>
+            <p className="mr-2" style={{marginRight:'10px'}}>Last Updated {convertTimestamp(newsData.timestamp)}</p>
             <LocalizationProvider dateAdapter={AdapterDayjs}>
               <DatePicker
                 value={selectedDate}
