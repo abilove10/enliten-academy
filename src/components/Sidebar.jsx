@@ -136,7 +136,7 @@ export default function Sidebar() {
     const fetchSubscriptionStatus = async () => {
         try {
             const status = await api.fetchSubscriptionStatus();
-            console.log("Subscription status:", status); // Debug log
+            // console.log("Subscription status:", status); // Debug log
             setSubscriptionStatus(status);
         } catch (err) {
             console.error('Error fetching subscription status:', err);

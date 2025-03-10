@@ -99,7 +99,7 @@ export default function Dashboard() {
                 labels: Object.keys(response.subject_analysis) || [],
                 values: Object.values(response.subject_analysis) || []
             });
-            console.log(subjectData);
+            // console.log(subjectData);
         }
         get_subject_data();
     },[userData])

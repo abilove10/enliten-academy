@@ -341,8 +341,8 @@ const formatText = (text) => {
         // Add user message to chat history
         setChatHistory(prev => [...prev, { type: 'user', text: q }]);
 
-        axios.post("http://localhost:5000/chat",
-        // axios.post("https://api.enliten.org.in/chat",
+        // axios.post("http://localhost:5000/chat",
+        axios.post("https://api.enliten.org.in/chat",
             { 
                 message: q,
                 isQuizMode: quizmode, // Make sure this is being sent
@@ -356,7 +356,7 @@ const formatText = (text) => {
             .then(response => {
                 setlayout3("flex");
                 setquery(response.data);
-                console.log('Response data:', response.data); // Debug log
+                // console.log('Response data:', response.data); // Debug log
 
                 // Handle quiz response
                 if (response.data.type === 'quiz' && response.data.questions) {

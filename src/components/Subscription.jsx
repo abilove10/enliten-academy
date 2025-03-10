@@ -73,7 +73,8 @@ const Subscription = () => {
             await checkSubscriptionStatus();
             localStorage.removeItem('pending_payment_id');
             // Redirect to homepage on success
-            navigate('/');
+            localStorage.removeItem("cached_subscription_status");
+            navigate('/dashboard');
           }
         } catch (err) {
           console.error("Payment verification failed:", err);
