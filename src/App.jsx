@@ -7,6 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Ai from './layouts/Ai'
 import News from './components/News'
 import Subscription from './components/Subscription'
+import Quiz from './layouts/Quiz'
 //import './App.css'  
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
         </ProtectedRoute>
       } />
       <Route path="/subscription" element={<Subscription />} />
+      <Route path="/quiz" element={<Quiz />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
