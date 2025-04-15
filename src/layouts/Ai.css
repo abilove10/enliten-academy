@@ -83,6 +83,23 @@
     background-color: #FCF6FF;
     align-self: flex-start;
   }
+
+
+  .chatBubble.user1 {
+    border-bottom-right-radius: 0px;
+    background-color: #efefef;
+    align-self: flex-end;
+    max-width: 60%;
+    margin-right: 30px;
+  }
+  .chatBubble.ai1 {
+    border-top-left-radius: 0px;
+    background-color: transparent;
+    align-self: flex-start;
+    padding-left: 50px;
+  }
+
+
   .chatAvatar {
     width: 40px;
     height: 40px;

@@ -341,8 +341,8 @@ const formatText = (text) => {
         // Add user message to chat history
         setChatHistory(prev => [...prev, { type: 'user', text: q }]);
 
-        // axios.post("http://localhost:5000/chat",
-        axios.post("https://api.enliten.org.in/chat",
+        axios.post("http://localhost:5000/chat",
+        // axios.post("https://api.enliten.org.in/chat",
             { 
                 message: q,
                 isQuizMode: quizmode, // Make sure this is being sent
