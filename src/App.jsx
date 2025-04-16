@@ -8,6 +8,7 @@ import Ai from './layouts/Ai'
 import News from './components/News'
 import Subscription from './components/Subscription'
 import Quiz from './layouts/Quiz'
+import Explore from './components/Explore'
 //import './App.css'  
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         }
       />
       <Route path="/ai-consultant" element={<Ai />} />
+      <Route path="/explore" element={<Explore />} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
       <Route path="/news" element={
         <ProtectedRoute>

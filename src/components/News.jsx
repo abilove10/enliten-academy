@@ -8,7 +8,9 @@ import { format } from 'date-fns';
 import { api } from '../utils/api';
 import Sidebar from '../components/Sidebar';
 import { useSidebar } from '../context/SidebarContext';
-import 'ldrs/hourglass';
+// import 'ldrs/hourglass';
+import { hourglass } from 'ldrs'
+hourglass.register()
 import './News.css'
 import axios from 'axios';
 import { Mic,Slack,Coffee } from 'react-feather';
@@ -50,26 +52,26 @@ const News = () => {
     
     return headers;
 };
-  function newsAi(date){
-    var query=document.getElementById('search').value;
-    // axios.post(`http://localhost:5000/api/news/ai/${date}`,
-    axios.post(`https://api.enliten.org.in/api/news/ai/${date}`,
+  // function newsAi(date){
+  //   var query=document.getElementById('search').value;
+  //   // axios.post(`http://localhost:5000/api/news/ai/${date}`,
+  //   axios.post(`https://api.enliten.org.in/api/news/ai/${date}`,
 
-      { 
-          query: query
-      },
-      {
-          method: 'POST',
-          headers: getHeaders(token),
-                credentials: 'include'
-      })
-      .then(response => {
-          console.log(response.data);
-          // setNewsData(response.data)
-      }).catch(error => {
-        console.error('Error:', error);
-      })
-  }
+  //     { 
+  //         query: query
+  //     },
+  //     {
+  //         method: 'POST',
+  //         headers: getHeaders(token),
+  //               credentials: 'include'
+  //     })
+  //     .then(response => {
+  //         console.log(response.data);
+  //         // setNewsData(response.data)
+  //     }).catch(error => {
+  //       console.error('Error:', error);
+  //     })
+  // }
 
   const isMobile = () => { 
     return /Mobi|Android/i.test(navigator.userAgent); 
@@ -157,7 +159,6 @@ const {
     // Add user message to chat history
     setChatHistory(prev => [...prev, { type: 'user', text: q }]);
 
-    // axios.post("https://api.enliten.org.in/chat",
     // axios.post(`http://localhost:5000/api/news/ai/${date}`,
       axios.post(`https://api.enliten.org.in/api/news/ai/${date}`,
 
