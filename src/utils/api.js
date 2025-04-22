@@ -557,20 +557,6 @@ export const api = {
                     if (!token) {
                         throw new Error('No authentication token found');
                     }
-                    const cachedconversations = localStorage.getItem('cached_conversations');
-                    if (cachedconversations) {
-                        const { data, timestamp } = JSON.parse(cachedconversations);
-                        const now = new Date().getTime();
-                        
-                        // If cache hasn't expired, return cached data
-                        if (now - timestamp < CACHE_EXPIRY_TIME) {
-                            var temp =await security.decryptResponse_base64(data);
-                            console.log("Temp:"+JSON.stringify(temp))
-                            return temp
-                        }
-                        // If expired, remove the cached data
-                        localStorage.removeItem('cached_conversations');
-                    }
         
                     const encryptedResponse = await this.fetchWithRetry(`${API_URL}/conversations`, {
                         method: 'GET',
@@ -580,10 +566,10 @@ export const api = {
                     // console.log(encryptedResponse)
         
                     const response = await security.decryptResponse_base64(encryptedResponse["data"]);
-                    localStorage.setItem('cached_conversations', JSON.stringify({
-                        data: encryptedResponse["data"],
-                        timestamp: new Date().getTime()
-                    }));
+                    // localStorage.setItem('cached_conversations', JSON.stringify({
+                    //     data: encryptedResponse["data"],
+                    //     timestamp: new Date().getTime()
+                    // }));
                     // if (!response || !response.data) {
                     //     return []; // Return empty array if no assessments found
                     // }
