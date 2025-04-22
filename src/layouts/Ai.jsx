@@ -3,8 +3,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { api } from '../utils/api';
-import 'ldrs/hourglass'
-
+import 'ldrs/hourglass';
+import Alert from '@mui/material/Alert';
+import { useParams,useNavigate,useLocation } from "react-router-dom";
 //Assets
 import user from '../assets/user.png';
 import downArrow from '../assets/icons/shape.png';
@@ -19,7 +20,7 @@ import not_found from "../assets/not_found.png"
 import ai from "../assets/images/ai.png"
 //Icons
 import { Mic,Slack,Coffee } from 'react-feather';
-import { Check, X, ChevronDown, ChevronUp } from 'react-feather';
+import { Check, X, ChevronDown, ChevronUp, MessageCircle,Plus } from 'react-feather';
 
 import send from "../assets/icons/send.png"
 import a1 from "../assets/icons/ai/a1.png"
@@ -46,7 +47,11 @@ import { useSidebar } from '../context/SidebarContext';
 import MCQQuiz from '../components/MCQQuiz';
 import HeuristicThink from '../components/HeuristicThink';
 
+import Chats from './Chats';
 function Ai(props) {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const { chatId } = useParams();
     const [query, setquery] = useState([]);
     const [layout1,setlayout1]=useState("flex");
     const [layout2,setlayout2]=useState("none");
@@ -58,6 +63,8 @@ function Ai(props) {
 
     const [loading, setLoading] = useState(true);
     const [showHeuristic,setshowHeuristic]=useState({});
+    const [Conversations,setConversations]=useState([]);
+    const [showchats,setShowChats]=useState(false);
     var heuristic_index=0;
     const isMobile = () => { 
         return /Mobi|Android/i.test(navigator.userAgent); 
@@ -330,8 +337,8 @@ const formatText = (text) => {
     },[heuristicmode]);
     
 
+    const token = localStorage.getItem('token');
     async function send_query() {
-        const token = localStorage.getItem('token');
         setlayout1("none");
         setlayout3("none");
         var q = document.getElementById("text_input").value;
@@ -346,7 +353,8 @@ const formatText = (text) => {
             { 
                 message: q,
                 isQuizMode: quizmode, // Make sure this is being sent
-                isHeuristicMode: heuristicmode
+                isHeuristicMode: heuristicmode,
+                conversations_id:chatId
             },
             {
                 method: 'POST',
@@ -383,6 +391,9 @@ const formatText = (text) => {
                     }]);
                 }
                 setlayout2("none");
+                if(location.pathname!="/chat"){
+                    navigate(`/chat/${response.data.conversation_id}`)
+                }
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -406,8 +417,8 @@ const formatText = (text) => {
                     }]);
                 }
             });
-    }
 
+    }
     // useEffect to update contentWidth
     useEffect(() => {
         const updateContentWidth = () => {
@@ -440,6 +451,110 @@ const formatText = (text) => {
             }
         }
     }, [chatHistory]);
+
+
+    const [alertMessage,setalertMessage]=useState('none')
+   const [Messages,setMessages]=useState(null);
+        useEffect(() => {
+            async function loadConversations() {
+                setChatHistory([]);
+                setLoading(true);
+                try {
+                    const temp = await api.getMessages(chatId);
+                    console.log(temp)
+                    setMessages(temp);
+                    
+                } catch (error) {
+                    setalertMessage("flex");
+                    console.error("Failed to load conversations:", error);
+                    navigate('/chat')
+                } finally {
+                    setLoading(false);
+                }
+            }
+            if(chatId){
+                loadConversations();
+
+            }
+        }, [chatId]);
+
+useEffect(()=>{
+    if(Messages){
+        
+        Messages.map((chats)=>{
+            setlayout1("none");
+            setlayout3("flex");
+                if(chats.sender=="ai"){
+                    if(JSON.parse(chats.content).type=='quiz'){
+                    setChatHistory(prev => [...prev, { type: chats.sender, text: <MCQQuiz questions={JSON.parse(chats.content).questions} />,
+                    isQuiz: true 
+                    }])
+                }else if(JSON.parse(chats.content).type === 'heuristic'){
+                    setChatHistory(prev => [...prev, { 
+                        type: chats.sender, 
+                        thinking: JSON.parse(chats.content).thinking,
+                        text: JSON.parse(chats.content).response,
+                        isHeuristic: true
+                    }]);
+                }
+                else{
+                    setChatHistory(prev => [...prev, { type: chats.sender, text: JSON.parse(chats.content).response }]);
+                }
+                }else{
+                    setChatHistory(prev => [...prev, { type: chats.sender, text: JSON.parse(chats.content).message }]);
+                }
+        })
+    }
+},[Messages])
+
+
+    // async function getConversations() {
+    //     axios.get("http://localhost:5000/conversations",
+    //         // axios.post("https://api.enliten.org.in/chat",
+    //             {
+    //                 method: 'GET',
+    //                 headers: getHeaders(token),
+    //                 credentials: 'include'
+    //             })
+    //             .then(response => {
+    //                 console.log(response.data);
+    //             }).catch(e=>{
+    //                 console.error(e);
+    //             })
+    // }
+
+
+
+
+
+
+
+
+if(showchats){
+    return(
+        < div style={{ display: 'flex' }}>
+            <Sidebar />
+            <div style={{
+                width: contentWidth,
+                marginLeft: isSidebarOpen && window.innerWidth > 768 ? '300px' : '0',
+                transition: 'all 0.3s ease',
+                position: 'relative',
+                zIndex: 1,
+                backgroundColor:"#FCF6FF",
+                height:"100vh",
+                display:"flex",
+                flexDirection:"column",
+                alignItems:"center"
+            }}>
+                <div onClick={()=>{setShowChats(!showchats)}} style={{position:'absolute',right:'20px',top:'20px',backgroundColor:"rgb(138, 43, 226)",display:'flex',padding:'8px',paddingRight:"10px",color:'white',borderRadius:'10px',gap:'8px',justifyContent:'space-between',alignItems:'center'}}>
+                    <Plus /> New Chat
+                </div>
+        <Chats setShowChats={setShowChats}/>
+        </div>
+        </div>
+    )
+}
+
 
     if (loading) {
         return (
@@ -480,6 +595,10 @@ const formatText = (text) => {
                 flexDirection:"column",
                 alignItems:"center"
             }}>
+                <Alert style={{display:alertMessage,marginTop:'30px'}} variant="filled" severity="error" onClose={() => {}}>Failed to load Conversation id: {chatId}</Alert> 
+                <div onClick={()=>{setShowChats(!showchats)}} style={{position:'absolute',right:'20px',top:'20px',backgroundColor:"rgb(138, 43, 226)",display:'flex',padding:'8px',paddingRight:"10px",color:'white',borderRadius:'10px',gap:'8px',justifyContent:'space-between',alignItems:'center'}}>
+                    <MessageCircle /> Chats
+                </div>
                 {/* <div className="block1" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingRight: "75px" }}>
                     <div style={{ display: "flex", alignItems: "center", width: "220px", justifyContent: "space-around", marginTop: "15px" }}>
                         <img src={user} width={50} height={50} />
@@ -489,9 +608,9 @@ const formatText = (text) => {
                     </div>
                 </div> */}
 
+
                 <div className="layout1" style={{ display: layout1 ,flexDirection:"column",alignItems:"center",marginTop:mobile?"20vh":"5%",...(mobile?{fontSize:"80%"}:{})}}>
                     <img src={ai} width={"8%"} alt="" style={{minWidth:"80px"}}/>
-
                     <h1 style={{ marginTop: "20px" }}>Where knowledge begins</h1>
                     <p style={{ color: "#B1ADAD" }}>Get start to explore the different topics with AI !!</p>
 

@@ -26,6 +26,8 @@ function App() {
         }
       />
       <Route path="/ai-consultant" element={<Ai />} />
+      <Route path="/chat/:chatId" element={<Ai />} />
+      <Route path="/chat" element={<Ai />} />
       <Route path="/explore" element={<Explore />} />
       <Route path="/auth/google/callback" element={<GoogleCallback />} />
       <Route path="/news" element={

@@ -49,6 +49,7 @@ const SUBSCRIPTION_CACHE_KEY = 'cached_subscription_status';
 // Clear cache on page reload
 window.addEventListener('load', () => {
     localStorage.removeItem(USER_DATA_CACHE_KEY);
+    localStorage.removeItem("cached_conversations");
 });
 
 export const api = {
@@ -526,6 +527,100 @@ export const api = {
             throw error;
         }
     },
+
+
+
+
+
+
+
+
+    async getConversations() {
+        // axios.get("http://localhost:5000/conversations",
+        //     // axios.post("https://api.enliten.org.in/chat",
+        //         {
+        //             method: 'GET',
+        //             headers: getHeaders(token),
+        //             credentials: 'include'
+        //         })
+        //         .then(response => {
+        //             console.log(response.data);
+        //         }).catch(e=>{
+        //             console.error(e);
+        //         })
+
+
+
+
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        throw new Error('No authentication token found');
+                    }
+                    const cachedconversations = localStorage.getItem('cached_conversations');
+                    if (cachedconversations) {
+                        const { data, timestamp } = JSON.parse(cachedconversations);
+                        const now = new Date().getTime();
+                        
+                        // If cache hasn't expired, return cached data
+                        if (now - timestamp < CACHE_EXPIRY_TIME) {
+                            var temp =await security.decryptResponse_base64(data);
+                            console.log("Temp:"+JSON.stringify(temp))
+                            return temp
+                        }
+                        // If expired, remove the cached data
+                        localStorage.removeItem('cached_conversations');
+                    }
+        
+                    const encryptedResponse = await this.fetchWithRetry(`${API_URL}/conversations`, {
+                        method: 'GET',
+                        headers: getHeaders(token),
+                        credentials: 'include'
+                    });
+                    // console.log(encryptedResponse)
+        
+                    const response = await security.decryptResponse_base64(encryptedResponse["data"]);
+                    localStorage.setItem('cached_conversations', JSON.stringify({
+                        data: encryptedResponse["data"],
+                        timestamp: new Date().getTime()
+                    }));
+                    // if (!response || !response.data) {
+                    //     return []; // Return empty array if no assessments found
+                    // }
+                    // console.log("Server:"+JSON.stringify(response))
+                    return response;
+                } catch (error) {
+                    console.error('Error fetching user assessments:', error);
+                    throw error;
+                }
+    },
+
+    async getMessages(conversation_id) {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        throw new Error('No authentication token found');
+                    }
+        
+                    const encryptedResponse = await this.fetchWithRetry(`${API_URL}/messages/${conversation_id}`, {
+                        method: 'GET',
+                        headers: getHeaders(token),
+                        credentials: 'include'
+                    });
+                    // console.log(encryptedResponse)
+        
+                    const response = await security.decryptResponse_base64(encryptedResponse["data"]);
+                    // if (!response || !response.data) {
+                    //     return []; // Return empty array if no assessments found
+                    // }
+                    // console.log("Server:"+JSON.stringify(response))
+                    return response;
+                } catch (error) {
+                    console.error('Error fetching user assessments:', error);
+                    throw error;
+                }
+    },
+
 
     // Add other API methods here
 }; 

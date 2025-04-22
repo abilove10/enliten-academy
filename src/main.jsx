@@ -6,11 +6,11 @@ import './index.css'
 import { SidebarProvider } from './context/SidebarContext';
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <SidebarProvider>
       <BrowserRouter>
         <App />
       </BrowserRouter>
     </SidebarProvider>
-  </React.StrictMode>,
+  // </React.StrictMode>,
 )

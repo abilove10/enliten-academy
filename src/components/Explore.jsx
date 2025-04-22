@@ -79,6 +79,16 @@ export default function Explore() {
                 <p>Indian Economy</p>
 
               </div>
+              <div className="container">
+                <img src={BookCover.H2} alt="" className='cover'/>
+                <p>History of TamilNadu</p>
+
+              </div>
+              <div className="container">
+                <img src={BookCover.Aptitude} alt="" className='cover'/>
+                <p>Aptitude and Mental Ability</p>
+
+              </div>
             </div>
           </div>
       </div>
