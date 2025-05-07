@@ -10,8 +10,37 @@ import Subscription from './components/Subscription'
 import Quiz from './layouts/Quiz'
 import Explore from './components/Explore'
 //import './App.css'  
+import { useEffect } from 'react'
 
+// Detect cross-origin iframe
+function isCrossOriginIframe() {
+try {
+  return window.top !== window.self && window.top.location.hostname !== window.location.hostname;
+} catch (err) {
+  // Throws if it's cross-origin
+  console.error(err);
+  return true;
+}
+}
+
+if (isCrossOriginIframe()) {
+document.body.innerHTML = '<h1>Access Denied: Cross-Origin Embedding is not allowed.</h1>';
+throw new Error('Blocked due to cross-origin iframe.');
+}
 function App() {
+
+
+useEffect(() => {
+  fetch('https://api.enliten.org.in/ping', { method: 'HEAD' })
+    .then(res => {
+      if (!res.ok) throw new Error();
+    })
+    .catch(() => {
+      document.body.innerHTML = '<h1>Server verification failed.</h1>';
+    });
+}, []);
+
+
   return (
     <Routes>
       <Route path="/" element={<Signup />} />
