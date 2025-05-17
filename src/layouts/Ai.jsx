@@ -354,7 +354,7 @@ const formatText = (text) => {
                 message: q,
                 isQuizMode: quizmode, // Make sure this is being sent
                 isHeuristicMode: heuristicmode,
-                conversations_id:chatId
+                conversation_id:chatId
             },
             {
                 method: 'POST',
