@@ -36,6 +36,7 @@
     "react-dom": "^19.0.0",
     "react-feather": "^2.0.10",
     "react-speech-recognition": "^3.10.0",
+    "recharts": "^2.15.3",
     "regenerator-runtime": "^0.14.1"
   },
   "devDependencies": {
