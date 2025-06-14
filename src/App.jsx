@@ -16,7 +16,8 @@ import AdminDashboard from './layouts/Admin/Dashboard'
 import Users from './layouts/Admin/Users'
 import Analytics from './layouts/Admin/Analytics'
 import Content from './layouts/Admin/Content'
-
+import SharedQuestions from './layouts/Admin/SharedQuestions'
+import QuizTest from './layouts/QuizTest'
 // Detect cross-origin iframe
 function isCrossOriginIframe() {
 try {
@@ -71,11 +72,13 @@ useEffect(() => {
       } />
       <Route path="/subscription" element={<Subscription />} />
       <Route path="/quiz" element={<Quiz />} />
+      <Route path="/quiz-test" element={<QuizTest />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<Users />} />
       <Route path="/admin/analytics" element={<Analytics />} />
       <Route path="/admin/content" element={<Content />} />
+      <Route path="/admin/shared-questions" element={<SharedQuestions />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

@@ -7,6 +7,7 @@ import './Users.css';
 
 const Users = () => {
   const navigate = useNavigate();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -63,8 +64,8 @@ const Users = () => {
   if (error) return <div className="error">Error: {error}</div>;
 
   return (
-    <div className="admin-layout">
-      <Navbar />
+    <div className={`admin-layout ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <Navbar onCollapse={setIsSidebarCollapsed} />
       
       <div className="users-content">
         <div className="users-header">

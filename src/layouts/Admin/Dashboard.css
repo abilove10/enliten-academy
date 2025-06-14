@@ -1,6 +1,12 @@
 .admin-dashboard {
   min-height: 100vh;
   background: #f1f5f9;
+  padding-left: 260px;
+  transition: padding-left 0.3s;
+}
+
+.admin-dashboard.collapsed {
+  padding-left: 80px;
 }
 
 .dashboard-content {
@@ -197,5 +203,9 @@
 
   .dashboard-grid {
     grid-template-columns: 1fr;
+  }
+
+  .admin-dashboard {
+    padding-left: 80px;
   }
 }

@@ -52,6 +52,13 @@ window.addEventListener('load', () => {
     localStorage.removeItem("cached_conversations");
 });
 
+export const fetchQuizQuestions = async (group, category, subcategory) => {
+  const url = `${API_URL}/api/quiz/questions?group=${encodeURIComponent(group)}&category=${encodeURIComponent(category)}&subcategory=${encodeURIComponent(subcategory)}`;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to fetch quiz questions');
+  return await response.json();
+};
+
 export const api = {
     async login(credentials) {
         const encryptedData = await security.encryptRequest(credentials);
@@ -105,7 +112,6 @@ export const api = {
 
     async googleSignIn() {
         try {
-            // console.log('Fetching Google Sign In URL...');
             localStorage.removeItem(USER_DATA_CACHE_KEY);
             localStorage.removeItem('cached_assessments');
             localStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
@@ -117,9 +123,7 @@ export const api = {
             }
             
             const { url } = await response.json();
-            // console.log('Received Google Sign In URL:', url);
             
-            // Open popup with specific features
             const popup = window.open(
                 url, 
                 'Google Sign In',
@@ -132,31 +136,24 @@ export const api = {
             }
 
             return new Promise((resolve, reject) => {
-                // Set timeout for the entire operation
                 const timeout = setTimeout(() => {
                     window.removeEventListener('message', messageHandler);
                     popup.close();
                     reject(new Error('Sign in timed out. Please try again.'));
                 }, 120000); // 2 minutes timeout
 
-                // Message event handler
                 const messageHandler = async (event) => {
-                    // console.log('Received message event:', event.data);
-                    
-                    // Validate origin
                     if (event.origin !== window.location.origin) {
                         console.log('Invalid origin:', event.origin);
                         return;
                     }
 
                     if (event.data.type === 'GOOGLE_SIGN_IN_SUCCESS') {
-                        // console.log('Received success message with code');
                         clearTimeout(timeout);
                         window.removeEventListener('message', messageHandler);
 
                         try {
                             const { code } = event.data;
-                            // console.log('Exchanging code for token...');
                             
                             const tokenResponse = await fetch(`${API_URL}/api/auth/google-signin-callback`, {
                                 method: 'POST',
@@ -164,7 +161,7 @@ export const api = {
                                 body: JSON.stringify({ code }),
                                 credentials: 'include'
                             });
-                            const r=await tokenResponse.json()
+                            const r = await tokenResponse.json();
                             localStorage.setItem('token', r["ads_id"]);
 
                             const response = await security.decryptResponse_base64(JSON.parse(JSON.stringify(r["data"])));
@@ -174,7 +171,6 @@ export const api = {
                             }
 
                             const data = response;
-                            // console.log('Token exchange successful');
                             popup.close();
                             resolve(data);
                         } catch (error) {
@@ -191,10 +187,7 @@ export const api = {
                     }
                 };
 
-                // Add message event listener
                 window.addEventListener('message', messageHandler);
-
-                // Focus the popup
                 popup.focus();
             });
         } catch (error) {
@@ -210,17 +203,14 @@ export const api = {
                 throw new Error('No authentication token found');
             }
 
-            // Check cache first
             const cachedData = localStorage.getItem(USER_DATA_CACHE_KEY);
             if (cachedData) {
                 const { data, timestamp } = JSON.parse(cachedData);
                 const now = new Date().getTime();
                 
-                // If cache hasn't expired, return cached data
                 if (now - timestamp < CACHE_EXPIRY_TIME) {
                     return await security.decryptResponse_base64(data);
                 }
-                // If expired, remove the cached data
                 localStorage.removeItem(USER_DATA_CACHE_KEY);
             }
 
@@ -230,18 +220,16 @@ export const api = {
                 credentials: 'include'
             });
 
-            if(encryptedResponse.data.status === 'error'){
+            if (encryptedResponse.data.status === 'error') {
                 throw new Error('Failed to fetch key');
             }
 
             const response = await security.decryptResponse_base64(encryptedResponse["data"]);
 
-            // Ensure we have a valid photo_url
             if (response && !response.photo_url) {
-                response.photo_url = ''; // Set empty string if no photo URL
+                response.photo_url = '';
             }
 
-            // Cache the response with timestamp
             localStorage.setItem(USER_DATA_CACHE_KEY, JSON.stringify({
                 data: encryptedResponse["data"],
                 timestamp: new Date().getTime()
@@ -254,13 +242,11 @@ export const api = {
         }
     },
 
-    // Optional method to force refresh
     async forceRefreshUserData() {
         localStorage.removeItem(USER_DATA_CACHE_KEY);
         return this.fetchUserData();
     },
 
-    //get user assessments
     async fetchUserAssessments() {
         try {
             const token = localStorage.getItem('token');
@@ -272,13 +258,10 @@ export const api = {
                 const { data, timestamp } = JSON.parse(cachedassessments);
                 const now = new Date().getTime();
                 
-                // If cache hasn't expired, return cached data
                 if (now - timestamp < CACHE_EXPIRY_TIME) {
-                    var temp =await security.decryptResponse_base64(data);
-                    // console.log(temp)
-                    return temp.assessments
+                    var temp = await security.decryptResponse_base64(data);
+                    return temp.assessments;
                 }
-                // If expired, remove the cached data
                 localStorage.removeItem('cached_assessments');
             }
 
@@ -287,7 +270,6 @@ export const api = {
                 headers: getHeaders(token),
                 credentials: 'include'
             });
-            // console.log(encryptedResponse)
 
             const response = await security.decryptResponse_base64(encryptedResponse["data"]);
             localStorage.setItem('cached_assessments', JSON.stringify({
@@ -296,7 +278,7 @@ export const api = {
             }));
     
             if (!response || !response.assessments) {
-                return []; // Return empty array if no assessments found
+                return [];
             }
 
             return response.assessments;
@@ -306,7 +288,6 @@ export const api = {
         }
     },
     
-    // Add retry logic for fetch requests
     async fetchWithRetry(url, options, retries = 3, delay = 1000) {
         try {
             const response = await fetch(url, options);
@@ -374,23 +355,6 @@ export const api = {
 
             const cacheKey = `news_cache_${formattedDate}`;
             const cachedData = localStorage.getItem(cacheKey);
-            // if (cachedData) {
-            //     const { data, timestamp } = JSON.parse(cachedData);
-            //     const now = new Date().getTime();
-                
-            //     try{
-
-            //         if (now - timestamp < CACHE_EXPIRY_TIME) {
-            //             return await security.decryptResponse_base64(data);
-            //         }
-            //     }catch(error){
-            //         console.error('Error fetching news:', error);
-            //         localStorage.removeItem(`news_cache_${formattedDate}`);
-            //         fetchNews(formattedDate);
-            //     }
-
-            //         localStorage.removeItem(cacheKey);
-            // }
 
             const response = await this.fetchWithRetry(`${API_URL}/api/news/${formattedDate}`, {
                 method: 'GET',
@@ -403,7 +367,6 @@ export const api = {
             }
             const decryptedData = await security.decryptResponse_base64(response.data);
             
-            // Cache the encrypted response
             localStorage.setItem(cacheKey, JSON.stringify({
                 data: response.data,
                 timestamp: new Date().getTime()
@@ -411,7 +374,6 @@ export const api = {
 
             return decryptedData;
         } catch (error) {
-
             console.error('Error fetching news:', error);
             throw error;
         }
@@ -471,17 +433,14 @@ export const api = {
                 throw new Error('No authentication token found');
             }
 
-            // Check cache first
             const cachedData = localStorage.getItem(SUBSCRIPTION_CACHE_KEY);
             if (cachedData) {
                 const { data, timestamp } = JSON.parse(cachedData);
                 const now = new Date().getTime();
                 
-                // If cache hasn't expired, return cached data
                 if (now - timestamp < CACHE_EXPIRY_TIME) {
                     return await security.decryptResponse_base64(data);
                 }
-                // If expired, remove the cached data
                 localStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
             }
 
@@ -493,7 +452,6 @@ export const api = {
 
             const decryptedResponse = await security.decryptResponse_base64(response.data);
             
-            // Cache the response with timestamp
             localStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify({
                 data: response.data,
                 timestamp: new Date().getTime()
@@ -528,85 +486,95 @@ export const api = {
         }
     },
 
-
-
-
-
-
-
-
     async getConversations() {
-        // axios.get("http://localhost:5000/conversations",
-        //     // axios.post("https://api.enliten.org.in/chat",
-        //         {
-        //             method: 'GET',
-        //             headers: getHeaders(token),
-        //             credentials: 'include'
-        //         })
-        //         .then(response => {
-        //             console.log(response.data);
-        //         }).catch(e=>{
-        //             console.error(e);
-        //         })
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
 
+            const encryptedResponse = await this.fetchWithRetry(`${API_URL}/conversations`, {
+                method: 'GET',
+                headers: getHeaders(token),
+                credentials: 'include'
+            });
 
-
-
-                try {
-                    const token = localStorage.getItem('token');
-                    if (!token) {
-                        throw new Error('No authentication token found');
-                    }
-        
-                    const encryptedResponse = await this.fetchWithRetry(`${API_URL}/conversations`, {
-                        method: 'GET',
-                        headers: getHeaders(token),
-                        credentials: 'include'
-                    });
-                    // console.log(encryptedResponse)
-        
-                    const response = await security.decryptResponse_base64(encryptedResponse["data"]);
-                    // localStorage.setItem('cached_conversations', JSON.stringify({
-                    //     data: encryptedResponse["data"],
-                    //     timestamp: new Date().getTime()
-                    // }));
-                    // if (!response || !response.data) {
-                    //     return []; // Return empty array if no assessments found
-                    // }
-                    // console.log("Server:"+JSON.stringify(response))
-                    return response;
-                } catch (error) {
-                    console.error('Error fetching user assessments:', error);
-                    throw error;
-                }
+            const response = await security.decryptResponse_base64(encryptedResponse["data"]);
+            return response;
+        } catch (error) {
+            console.error('Error fetching user assessments:', error);
+            throw error;
+        }
     },
 
     async getMessages(conversation_id) {
-                try {
-                    const token = localStorage.getItem('token');
-                    if (!token) {
-                        throw new Error('No authentication token found');
-                    }
-        
-                    const encryptedResponse = await this.fetchWithRetry(`${API_URL}/messages/${conversation_id}`, {
-                        method: 'GET',
-                        headers: getHeaders(token),
-                        credentials: 'include'
-                    });
-                    // console.log(encryptedResponse)
-        
-                    const response = await security.decryptResponse_base64(encryptedResponse["data"]);
-                    // if (!response || !response.data) {
-                    //     return []; // Return empty array if no assessments found
-                    // }
-                    // console.log("Server:"+JSON.stringify(response))
-                    return response;
-                } catch (error) {
-                    console.error('Error fetching user assessments:', error);
-                    throw error;
-                }
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const encryptedResponse = await this.fetchWithRetry(`${API_URL}/messages/${conversation_id}`, {
+                method: 'GET',
+                headers: getHeaders(token),
+                credentials: 'include'
+            });
+
+            const response = await security.decryptResponse_base64(encryptedResponse["data"]);
+            return response;
+        } catch (error) {
+            console.error('Error fetching user assessments:', error);
+            throw error;
+        }
     },
 
+    async fetchQuizData(group, category, subcategory) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
 
-    // Add other API methods here
-}; 
+            const encryptedResponse = await this.fetchWithRetry(`${API_URL}/api/quiz/Group${group}/${category}/${subcategory}`, {
+                method: 'GET',
+                headers: getHeaders(token),
+                credentials: 'include'
+            });
+
+            if (!encryptedResponse || !encryptedResponse.data) {
+                throw new Error('Invalid response format');
+            }
+
+            const response = await security.decryptResponse_base64(encryptedResponse.data);
+            return response;
+        } catch (error) {
+            console.error('Error fetching quiz data:', error);
+            throw error;
+        }
+    },
+
+    async fetchQuizCategories(group) {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                throw new Error('No authentication token found');
+            }
+
+            const encryptedResponse = await this.fetchWithRetry(`${API_URL}/api/quiz/categories/Group${group}`, {
+                method: 'GET',
+                headers: getHeaders(token),
+                credentials: 'include'
+            });
+
+            if (!encryptedResponse || !encryptedResponse.data) {
+                throw new Error('Invalid response format');
+            }
+
+            const response = await security.decryptResponse_base64(encryptedResponse.data);
+            return response;
+        } catch (error) {
+            console.error('Error fetching quiz categories:', error);
+            throw error;
+        }
+    },
+};

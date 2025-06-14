@@ -152,11 +152,11 @@ export default function Sidebar() {
 
         return (
             <div 
-                className={`subscription-badge ${isActive ? 'premium' : 'free'}`}
+                className={`subscription-badge1 ${isActive ? 'premium1' : 'free1'}`}
                 onClick={() => navigate('/subscription')}
             >
-                <div className="badge-content">
-                    <div className={`subscription-status ${isActive ? 'active' : 'inactive'}`}>
+                <div className="badge-content1">
+                    <div className={`subscription-status1 ${isActive ? 'active' : 'inactive'}`}>
                         <div className="status-dot"></div>
                         <span>{isActive ? 'Premium' : ''}</span>
                     </div>

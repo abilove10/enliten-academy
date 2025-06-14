@@ -57,6 +57,7 @@
   flex-direction: column;
   gap: 4px;
   cursor: pointer;
+
 }
 
 .nav-toggle span {
@@ -85,5 +86,126 @@
 
   .nav-links.active {
     display: flex;
+  }
+}
+
+.admin-sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 260px;
+  background: #1a1c23;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s;
+  z-index: 1000;
+}
+
+.admin-sidebar.collapsed {
+  width: 80px;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid #2d3748;
+}
+
+.brand-text {
+  font-size: 1.25rem;
+  font-weight: 600;
+  background: linear-gradient(45deg, #6366f1, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  white-space: nowrap;
+}
+
+.collapse-btn {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 0.5rem;
+  font-size: 1.25rem;
+}
+
+.nav-links {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 0;
+  flex: 1;
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  color: #94a3b8;
+  text-decoration: none;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.nav-link:hover, .nav-link.active {
+  background: #2d3748;
+  color: white;
+}
+.nav-link{
+  border-radius: 10px;
+}
+
+.nav-icon {
+  font-size: 1.25rem;
+  min-width: 24px;
+  text-align: center;
+}
+
+.collapsed .nav-text {
+  display: none;
+}
+
+.collapsed .brand-text {
+  display: none;
+}
+
+.logout-btn {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: #991b1b;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: background 0.3s;
+  width: 100%;
+  text-align: left;
+  font-size: 1rem;
+}
+
+.logout-btn:hover {
+  background: #7f1d1d;
+}
+
+@media (max-width: 768px) {
+  .admin-sidebar {
+    width: 80px;
+  }
+
+  .brand-text {
+    display: none;
+  }
+
+  .nav-text {
+    display: none;
+  }
+
+  .collapse-btn {
+    display: none;
   }
 }

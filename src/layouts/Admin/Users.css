@@ -1,8 +1,11 @@
 .admin-layout {
   min-height: 100vh;
   background: #f1f5f9;
+  padding-left: 15%;
 }
-
+.admin-layout.collapsed {
+  padding-left: 80px;
+}
 .users-content {
   padding: 2rem;
   max-width: 1400px;

@@ -6,6 +6,7 @@ import './Dashboard.css';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeUsers: 0,
@@ -68,8 +69,8 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="admin-dashboard">
-      <Navbar />
+    <div className={`admin-dashboard ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <Navbar onCollapse={setIsSidebarCollapsed} />
       
       <div className="dashboard-content">
         <h1 className="dashboard-title">Dashboard Overview</h1>

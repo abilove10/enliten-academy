@@ -20,6 +20,7 @@ import './Analytics.css';
 
 const Analytics = () => {
   const navigate = useNavigate();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [analytics, setAnalytics] = useState({
     userGrowth: [],
     subjectPerformance: [],
@@ -67,8 +68,8 @@ const Analytics = () => {
   if (error) return <div className="error">Error: {error}</div>;
 
   return (
-    <div className="admin-layout">
-      <Navbar />
+    <div className={`admin-layout ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <Navbar onCollapse={setIsSidebarCollapsed} />
       <div className="analytics-content">
         <h1>Analytics Dashboard</h1>
 

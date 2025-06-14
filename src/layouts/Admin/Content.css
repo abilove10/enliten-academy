@@ -105,6 +105,10 @@
   gap: 0.5rem;
 }
 
+.admin-layout.collapsed {
+  padding-left: 80px;
+}
+
 .edit-btn, .delete-btn {
   padding: 0.375rem 0.75rem;
   border: none;

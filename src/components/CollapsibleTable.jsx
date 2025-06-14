@@ -1,224 +1,167 @@
-import React, { useState } from "react";
+import React from "react";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  IconButton,
-  Collapse,
-  Paper,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Box,
   Typography,
   Card,
-  CardContent,
+  Chip,
+  Grid,
 } from "@mui/material";
-import { KeyboardArrowDown, KeyboardArrowUp } from "@mui/icons-material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import { motion } from "framer-motion";
 
-const syllabusData = [
-  {
-    topic: "General Science",
-    subtopics: [
-      "Scientific Knowledge and Scientific Temper",
-      "Power of Reasoning",
-      "Rote Learning Vs Conceptual Learning",
-      "Science as a tool to understand the past, present, and future",
-    ],
-  },
-  {
-    topic: "Physics",
-    subtopics: [
-      "Nature of Universe",
-      "General Scientific Laws",
-      "Mechanics",
-      "Properties of Matter",
-      "Force",
-      "Motion and Energy",
-      "Everyday application of the basic principles of Mechanics",
-      "Electricity",
-      "Magnetism",
-      "Light",
-      "Sound",
-      "Heat",
-      "Nuclear Physics in our daily life",
-      "Laser",
-      "Electronics and Communications",
-    ],
-  },
-  {
-    topic: "Chemistry",
-    subtopics: [
-      "Elements and Compounds",
-      "Acids, Base and Salts",
-      "Petroleum Products",
-      "Fertilizers and Pesticides",
-    ],
-  },
-  {
-    topic: "Botany & Zoology",
-    subtopics: [
-      "Main Concepts of Life Science",
-      "Classification of Living Organism",
-      "Evolution",
-      "Genetics",
-      "Physiology",
-      "Nutrition",
-      "Health and Hygiene",
-      "Human Diseases",
-      "Environment and Ecology",
-    ],
-  },
-  {
-    topic: "Geography",
-    subtopics: [
-      "Location",
-      "Physical Features",
-      "Monsoon, Rainfall, Weather and Climate",
-      "Water Resources",
-      "Rivers in India",
-      "Soil, Minerals and Natural Resources",
-      "Forest and Wildlife",
-      "Agricultural Pattern",
-      "Transport and Communication",
-      "Social Geography",
-      "Population Density and Distribution",
-      "Racial, linguistic groups and major tribes",
-      "Natural Calamity",
-      "Disaster Management",
-      "Environmental Pollution: Reasons and preventive measures",
-      "Climate Change",
-      "Green Energy",
-    ],
-  },
-  {
-    topic: "Indian Economy",
-    subtopics: [
-      "Nature of Indian Economy",
-      "Five Year Plan Models - An Assessment",
-      "Planning Commission and Niti Ayog",
-      "Sources of revenue",
-      "Reserve Bank of India",
-      "Fiscal Policy and Monetary Policy",
-      "Finance Commission",
-      "Resource sharing between Union and State Governments",
-      "Goods and Services Tax",
-      "Structure of Indian Economy and Employment Generation",
-      "Land reforms and Agriculture",
-      "Application of Science and Technology in agriculture",
-      "Industrial growth",
-      "Rural welfare oriented programmes",
-      "Social problems - Population, education, health, employment, poverty",
-    ],
-  },
-];
+import { useNavigate } from 'react-router-dom';
 
-function CollapsibleTable(group) {
-  const [openRows, setOpenRows] = useState({});
-  const handleRowClick = (index) => {
-    setOpenRows((prevOpenRows) => ({
-      ...prevOpenRows,
-      [index]: !prevOpenRows[index],
-    }));
-  };
-
+function CollapsibleTable({ group, quizData, loading }) {
+  const navigate = useNavigate();
   return (
     <Box sx={{ display: "flex", justifyContent: "center", mt: 0 }}>
       <Card
+        component={motion.div}
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.3 }}
         sx={{
           width: "90%",
-          // backgroundColor: "#F3E5F5",
-          borderRadius: 3,
-          // boxShadow: 3,
-          padding: 2,
+          maxWidth: "1200px",
+          borderRadius: 4,
+          overflow: "hidden",
+          boxShadow: "0 8px 24px rgba(106, 27, 154, 0.08)",
+          p: 3,
         }}
       >
         <Typography
           variant="h5"
+          component={motion.h2}
+          layout
           fontWeight="bold"
           align="center"
-          sx={{ padding: 2, color: "#6A1B9A" }}
+          sx={{
+            mb: 4,
+            background: "linear-gradient(45deg, #6A1B9A, #9C27B0)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
         >
-          TNPSC Group {group.group} Syllabus
+          TNPSC Group {group} Syllabus
         </Typography>
-        <TableContainer component={Paper} sx={{ borderRadius: 3, boxShadow: 3 }}>
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#E1BEE7" }}>
-                <TableCell />
-                <TableCell
-                  sx={{
-                    fontWeight: "bold",
-                    fontSize: 18,
-                    textTransform: "uppercase",
-                    color: "#4A148C",
+
+        {loading ? (
+          <Typography align="center" sx={{ mt: 4 }}>
+            Loading quiz details...
+          </Typography>
+        ) : quizData && Array.isArray(quizData) ? (
+          quizData.map((item, index) => (
+            <Accordion
+              key={index}
+              component={motion.div}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.1 }}
+              sx={{
+                mb: 2,
+                borderRadius: "16px!important",
+                overflow: "hidden",
+                '&:before': { display: 'none' },
+                boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+                border: '1px solid rgba(106, 27, 154, 0.1)',
+              }}
+            >
+              <AccordionSummary
+                expandIcon={
+                  <ExpandMoreIcon sx={{ color: "#9C27B0" }} />
+                }
+                sx={{
+                  background: "linear-gradient(45deg, rgba(106, 27, 154, 0.03), rgba(156, 39, 176, 0.03))",
+                  '&:hover': {
+                    background: "linear-gradient(45deg, rgba(106, 27, 154, 0.06), rgba(156, 39, 176, 0.06))",
+                  }
+                }}
+              >
+                <Typography 
+                  sx={{ 
+                    fontSize: "1.1rem", 
+                    fontWeight: "600",
+                    color: "#6A1B9A",
                   }}
                 >
-                  Topics
-                </TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {syllabusData.map((item, index) => (
-                <React.Fragment key={index}>
-                  <TableRow
-                    sx={{
-                      "&:hover": { backgroundColor: "#FCF6FF" },
-                      transition: "0.3s",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <TableCell>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleRowClick(index)}
+                  {item.topic || item.id}
+                </Typography>
+                {item.category && (
+                  <Typography sx={{ ml: 2, color: '#888', fontSize: '0.95em' }}>
+                    {item.category}
+                  </Typography>
+                )}
+              </AccordionSummary>
+              <AccordionDetails sx={{ p: 3 }}>
+                <Grid container spacing={2}>
+                  {item.subtopics && item.subtopics.map((subtopic, subIndex) => (
+                    <Grid item xs={12} md={6} key={subIndex}>
+                      <motion.div
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: subIndex * 0.05 }}
                       >
-                        {openRows[index] ? (
-                          <KeyboardArrowUp sx={{ color: "#6A1B9A" }} />
-                        ) : (
-                          <KeyboardArrowDown sx={{ color: "#6A1B9A" }} />
-                        )}
-                      </IconButton>
-                    </TableCell>
-                    <TableCell sx={{ fontSize: 16, fontWeight: "bold" }}>
-                      {item.topic}
-                    </TableCell>
-                  </TableRow>
-                  <TableRow>
-                    <TableCell style={{ paddingBottom: 0, paddingTop: 0 }} colSpan={2}>
-                      <Collapse in={openRows[index]} timeout="auto" unmountOnExit>
-                        <Box margin={1}>
-                          <Typography
-                            variant="subtitle1"
-                            gutterBottom
+                        <Card
+                          elevation={0}
+                          sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            border: '1px solid rgba(106, 27, 154, 0.1)',
+                            background: 'rgba(106, 27, 154, 0.02)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            transition: 'all 0.3s ease',
+                            '&:hover': {
+                              background: 'rgba(106, 27, 154, 0.05)',
+                              transform: 'translateY(-2px)',
+                            }
+                          }}
+                        >
+                          <Chip
+                            size="small"
+                            label={subIndex + 1}
                             sx={{
-                              fontWeight: "bold",
-                              color: "#4A148C",
-                              ml: 2,
+                              backgroundColor: 'rgba(106, 27, 154, 0.1)',
+                              color: '#6A1B9A',
+                              fontWeight: '600',
+                              minWidth: '32px',
                             }}
-                          >
-                            Units:
+                          />
+                          <Typography sx={{ color: '#333', flex: 1 }}>
+                            {subtopic}
                           </Typography>
-                          <Table size="small">
-                            <TableBody>
-                              {item.subtopics.map((subtopic, subIndex) => (
-                                <TableRow key={subIndex}>
-                                  <TableCell sx={{ paddingLeft: 4 }}>
-                                    {subtopic}
-                                  </TableCell>
-                                </TableRow>
-                              ))}
-                            </TableBody>
-                          </Table>
-                        </Box>
-                      </Collapse>
-                    </TableCell>
-                  </TableRow>
-                </React.Fragment>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                          <button
+  style={{
+    marginLeft: 8,
+    background: '#B57EDC',
+    color: 'white',
+    border: 'none',
+    borderRadius: 6,
+    padding: '4px 12px',
+    cursor: 'pointer',
+    fontWeight: 500
+  }}
+  onClick={() => navigate('/quiz-test', { state: { group, category: item.category || item.topic, subcategory: subtopic } })}
+>
+  Take Test
+</button>
+                        </Card>
+                      </motion.div>
+                    </Grid>
+                  ))}
+                </Grid>
+              </AccordionDetails>
+            </Accordion>
+          ))
+        ) : (
+          <Typography align="center" sx={{ mt: 4 }}>
+            No quiz details available.
+          </Typography>
+        )}
       </Card>
     </Box>
   );

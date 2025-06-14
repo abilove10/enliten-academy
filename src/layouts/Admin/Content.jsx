@@ -3,13 +3,18 @@ import { useNavigate } from "react-router-dom";
 import Navbar from './components/Navbar';
 import { config } from '../../utils/config';
 import './Content.css';
+import QuizManager from './components/QuizManager';
+import QuizModal from './components/QuizModal';
+import SharedQuestions from './SharedQuestions';
 
 const Content = () => {
   const navigate = useNavigate();
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [news, setNews] = useState([]);
-  const [tab, setTab] = useState('news'); // news, assessments, quiz
+  const [tab, setTab] = useState('news'); // news, assessments, quiz, mcq
+  const [showQuizModal, setShowQuizModal] = useState(false);
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -68,12 +73,17 @@ const Content = () => {
     fetchContent();
   }, [navigate]);
 
+  const handleQuizSubmit = (quizData) => {
+    console.log('Quiz submitted:', quizData);
+    setShowQuizModal(false);
+  };
+
   if (loading) return <div className="loading">Loading content...</div>;
   if (error) return <div className="error">Error: {error}</div>;
 
   return (
-    <div className="admin-layout">
-      <Navbar />
+    <div className={`admin-layout ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+      <Navbar onCollapse={setIsSidebarCollapsed} />
       
       <div className="content-wrapper">
         <div className="content-header">
@@ -97,6 +107,12 @@ const Content = () => {
               onClick={() => setTab('quiz')}
             >
               Quiz
+            </button>
+            <button 
+              className={`tab-btn ${tab === 'mcq' ? 'active' : ''}`}
+              onClick={() => setTab('mcq')}
+            >
+              MCQ Management
             </button>
           </div>
         </div>
@@ -140,9 +156,31 @@ const Content = () => {
           <div className="quiz-section">
             <div className="section-header">
               <h2>Quiz Management</h2>
-              <button className="add-btn">Add Quiz</button>
+              <button 
+                className="add-btn"
+                onClick={() => setShowQuizModal(true)}
+              >
+                Add Quiz
+              </button>
             </div>
-            {/* Quiz content here */}
+            
+            <QuizManager />
+            
+            {showQuizModal && (
+              <QuizModal
+                onClose={() => setShowQuizModal(false)}
+                onSubmit={handleQuizSubmit}
+              />
+            )}
+          </div>
+        )}
+
+        {tab === 'mcq' && (
+          <div className="mcq-section">
+            <div className="section-header">
+              <h2>MCQ Management</h2>
+            </div>
+            <SharedQuestions />
           </div>
         )}
       </div>
